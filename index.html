@@ -554,6 +554,51 @@ select {
 .modal-backdrop:has(.modal-sheet--small) { align-items: center; }
 .confirm-text { font-family: "Itim", cursive; font-size: 17.5px; line-height: 1.5; margin: 6px 4px 18px; text-align: center; }
 
+/* ═══════ CHIA THEO KHẨU PHẦN ═══════ */
+.tab-row--3 .tab-btn { font-size: 13.5px; padding: 9px 4px; }
+
+.share-stepper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.share-btn {
+  width: 30px; height: 30px;
+  font-family: "Itim", cursive; font-size: 19px; line-height: 1;
+  color: var(--ink); background: var(--highlight);
+  border: 1.5px solid var(--ink); border-radius: 8px; cursor: pointer;
+}
+.share-btn:active { transform: translate(1px, 1px); }
+.share-num {
+  min-width: 46px; text-align: center;
+  font-weight: 700; font-size: 15px;
+  font-family: "Itim", cursive;
+}
+.share-amt {
+  flex-shrink: 0; min-width: 84px; text-align: right;
+  font-size: 12.5px; color: var(--pen-green); font-weight: 600;
+}
+
+/* ═══════ BANNER CHẾ ĐỘ ═══════ */
+.mode-banner {
+  max-width: 560px; margin: 10px 16px 0 30px; padding: 10px 14px;
+  font-size: 12.5px; line-height: 1.55; color: var(--ink-soft);
+  background: var(--card); border: 1.5px dashed var(--ink-soft);
+  border-radius: 10px;
+}
+.mode-banner code { background: var(--highlight); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+
+/* ═══════ BOTTOM BAR MÀN HÌNH NHÓM ═══════ */
+.bottom-nav--group .nav-btn { gap: 3px; }
+.nav-btn--accent {
+  margin: 7px 8px;
+  border-radius: 12px;
+  background: var(--pen-red);
+  color: var(--paper) !important;
+  border: 1.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-weight: 700;
+  font-family: "Itim", cursive;
+}
+.nav-btn--accent:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.page-area--group { padding-bottom: calc(var(--nav-h) + 40px); }
+
 </style>
 </head>
 <body>
@@ -652,13 +697,6 @@ select {
     </div>
   </header>
 
-  <!-- Hàng nút tròn kiểu Splitwise: Settle up · Balances · Totals -->
-  <div class="pill-row">
-    <button id="btn-pill-settle" class="pill-btn">⚖️ Cấn nợ</button>
-    <button id="btn-pill-balances" class="pill-btn">👥 Số dư</button>
-    <button id="btn-pill-totals" class="pill-btn">∑ Tổng chi</button>
-  </div>
-
   <main class="page-area page-area--group">
     <div id="my-group-status" class="my-group-status">…</div>
     <div id="group-feed" class="feed"></div>
@@ -668,7 +706,13 @@ select {
     </div>
   </main>
 
-  <button id="btn-fab-group" class="fab">＋ Ghi khoản chi</button>
+  <!-- Bottom bar của nhóm: Cấn nợ · Số dư · Tổng chi · Ghi chi -->
+  <nav class="bottom-nav bottom-nav--group">
+    <button id="btn-pill-settle" class="nav-btn"><span class="nav-icon">⚖️</span><span>Cấn nợ</span></button>
+    <button id="btn-pill-balances" class="nav-btn"><span class="nav-icon">👥</span><span>Số dư</span></button>
+    <button id="btn-pill-totals" class="nav-btn"><span class="nav-icon">∑</span><span>Tổng chi</span></button>
+    <button id="btn-fab-group" class="nav-btn nav-btn--accent"><span class="nav-icon">＋</span><span>Ghi chi</span></button>
+  </nav>
 </section>
 
 <!-- ═════ MODAL: LẬP SỔ / NHẬP MÃ ═════ -->
@@ -734,9 +778,10 @@ select {
 
       <div class="field">
         <span class="field-label">Chia kiểu gì?</span>
-        <div class="tab-row">
+        <div class="tab-row tab-row--3">
           <button type="button" class="tab-btn split-mode active" data-split="equal">Chia đều</button>
-          <button type="button" class="tab-btn split-mode" data-split="custom">Mỗi người một khoản</button>
+          <button type="button" class="tab-btn split-mode" data-split="custom">Số tiền chính xác</button>
+          <button type="button" class="tab-btn split-mode" data-split="shares">Theo khẩu phần</button>
         </div>
         <div id="custom-splits" class="custom-splits hidden"></div>
         <p id="split-check" class="split-check"></p>
@@ -1029,6 +1074,19 @@ const monthShort = (d) => "thg " + (d.getMonth() + 1);
 const timeShort = (ts) => entryDate(ts).toLocaleString("vi-VN",
   { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
 
+// Quy khẩu phần thành số tiền, người cuối nhận phần dư làm tròn để tổng khớp tuyệt đối
+function splitsFromShares(total, shares) {
+  const names = Object.keys(shares).filter((n) => shares[n] > 0);
+  const sum = names.reduce((s, n) => s + shares[n], 0);
+  const out = {};
+  let acc = 0;
+  names.forEach((n, i) => {
+    if (i === names.length - 1) out[n] = total - acc;
+    else { const v = Math.round((total * shares[n]) / sum); out[n] = v; acc += v; }
+  });
+  return out;
+}
+
 function shareOf(entry, name) {
   if (!entry.participants?.includes(name)) return 0;
   if (entry.splits && entry.splits[name] != null) return entry.splits[name];
@@ -1221,7 +1279,7 @@ function renderGroup() {
             <span class="feed-sub">${escapeHTML(en.payer)} đã chuyển cho ${escapeHTML(en.to)}</span>
           </span>
           <span class="feed-right lent"><span class="lbl">&nbsp;</span><span class="amt">${fmtVND(en.amount)}</span></span>
-          <button class="feed-del" data-del="${en.id}" data-label="chuyển tiền ${escapeHTML(en.payer)} → ${escapeHTML(en.to)}">✕</button>
+          ${en.addedBy === me ? `<button class="feed-del" data-del="${en.id}" data-label="chuyển tiền ${escapeHTML(en.payer)} → ${escapeHTML(en.to)}">✕</button>` : ""}
         </div>`;
       continue;
     }
@@ -1244,10 +1302,10 @@ function renderGroup() {
         ${dateBlock}
         <span class="feed-main">
           <span class="feed-title">${escapeHTML(en.desc)}</span>
-          <span class="feed-sub">${escapeHTML(en.payer)} đã trả ${fmtVND(en.amount)} · chia ${en.participants.length} người</span>
+          <span class="feed-sub">${escapeHTML(en.payer)} đã trả ${fmtVND(en.amount)} · ${en.shares ? "chia theo phần: " + en.participants.map((p) => escapeHTML(p) + " ×" + en.shares[p]).join(", ") : "chia " + en.participants.length + " người"}</span>
         </span>
         ${right}
-        <button class="feed-del" data-del="${en.id}" data-label="${escapeHTML(en.desc)}">✕</button>
+        ${en.addedBy === me ? `<button class="feed-del" data-del="${en.id}" data-label="${escapeHTML(en.desc)}">✕</button>` : ""}
       </div>`;
   }
 
@@ -1402,21 +1460,82 @@ const checkedParticipants = () =>
   [...$("exp-participants").querySelectorAll("input:checked")].map((c) => c.value);
 
 function refreshCustomSplits() {
-  if (state.splitMode !== "custom") { $("split-check").textContent = ""; return; }
+  if (state.splitMode === "equal") { $("split-check").textContent = ""; $("split-check").className = "split-check"; return; }
   const people = checkedParticipants();
-  const old = {};
-  $("custom-splits").querySelectorAll("input").forEach((i) => (old[i.dataset.name] = i.value));
-  $("custom-splits").innerHTML = people.map((p) => `
-    <div class="custom-split-row">
-      <span>${escapeHTML(p)}</span>
-      <input type="text" inputmode="numeric" placeholder="0" data-name="${escapeHTML(p)}" value="${escapeHTML(old[p] || "")}">
-    </div>`).join("");
-  $("custom-splits").querySelectorAll("input").forEach((i) => i.addEventListener("input", updateSplitCheck));
+
+  if (state.splitMode === "custom") {
+    const old = {};
+    $("custom-splits").querySelectorAll("input[data-name]").forEach((i) => (old[i.dataset.name] = i.value));
+    $("custom-splits").innerHTML = people.map((p) => `
+      <div class="custom-split-row">
+        <span>${escapeHTML(p)}</span>
+        <input type="text" inputmode="numeric" placeholder="0" data-name="${escapeHTML(p)}" value="${escapeHTML(old[p] || "")}">
+      </div>`).join("");
+    $("custom-splits").querySelectorAll("input").forEach((i) => i.addEventListener("input", updateSplitCheck));
+  }
+
+  if (state.splitMode === "shares") {
+    // Giữ số phần đã chỉnh khi vẽ lại; mặc định mỗi người 1 phần
+    const old = {};
+    $("custom-splits").querySelectorAll(".share-num").forEach((el) => (old[el.dataset.name] = Number(el.textContent)));
+    $("custom-splits").innerHTML = people.map((p) => `
+      <div class="custom-split-row">
+        <span>${escapeHTML(p)}</span>
+        <span class="share-stepper">
+          <button type="button" class="share-btn" data-share-btn="${escapeHTML(p)}" data-d="-1">−</button>
+          <span class="share-num" data-name="${escapeHTML(p)}">${old[p] ?? 1}</span>
+          <button type="button" class="share-btn" data-share-btn="${escapeHTML(p)}" data-d="1">+</button>
+        </span>
+        <span class="share-amt" data-amt="${escapeHTML(p)}"></span>
+      </div>`).join("");
+    $("custom-splits").querySelectorAll("[data-share-btn]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const el = $("custom-splits").querySelector(`.share-num[data-name="${CSS.escape(btn.dataset.shareBtn)}"]`);
+        el.textContent = Math.max(0, Number(el.textContent) + Number(btn.dataset.d));
+        updateSplitCheck();
+      }));
+  }
   updateSplitCheck();
+}
+
+// Đọc bảng khẩu phần hiện tại từ UI
+function readShares() {
+  const shares = {};
+  $("custom-splits").querySelectorAll(".share-num").forEach((el) => {
+    shares[el.dataset.name] = Number(el.textContent) || 0;
+  });
+  return shares;
 }
 
 function updateSplitCheck() {
   const el = $("split-check");
+
+  if (state.splitMode === "shares") {
+    const total = parseAmount($("exp-amount").value);
+    const shares = readShares();
+    const sum = Object.values(shares).reduce((a, b) => a + b, 0);
+    if (sum === 0) {
+      el.textContent = "Cần ít nhất 1 phần nhé";
+      el.className = "split-check bad";
+      $("custom-splits").querySelectorAll("[data-amt]").forEach((s) => (s.textContent = ""));
+      return;
+    }
+    if (!total) {
+      el.textContent = `Tổng ${sum} phần — nhập số tiền để tính mỗi phần`;
+      el.className = "split-check";
+      $("custom-splits").querySelectorAll("[data-amt]").forEach((s) => (s.textContent = ""));
+      return;
+    }
+    const splits = splitsFromShares(total, shares);
+    $("custom-splits").querySelectorAll("[data-amt]").forEach((s) => {
+      const name = s.dataset.amt;
+      s.textContent = shares[name] > 0 ? "= " + fmtVND(splits[name]) : "không tính";
+    });
+    el.textContent = `✓ ${sum} phần · mỗi phần ≈ ${fmtVND(total / sum)}`;
+    el.className = "split-check ok";
+    return;
+  }
+
   if (state.splitMode !== "custom") { el.textContent = ""; el.className = "split-check"; return; }
   const total = parseAmount($("exp-amount").value);
   if (!total) { el.textContent = "Nhập tổng số tiền trước nhé"; el.className = "split-check"; return; }
@@ -1433,9 +1552,9 @@ function bindEvents() {
   document.querySelectorAll(".modal-backdrop").forEach((m) =>
     m.addEventListener("click", (e) => { if (e.target === m) m.classList.add("hidden"); }));
 
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
+  document.querySelectorAll("#screen-home .nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+      document.querySelectorAll("#screen-home .nav-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       document.querySelectorAll("#screen-home .tab-page").forEach((p) => p.classList.remove("active"));
       $(btn.dataset.tab).classList.add("active");
@@ -1561,7 +1680,7 @@ function bindEvents() {
     if (state.splitMode === "custom") {
       const splits = {};
       let sum = 0;
-      for (const input of $("custom-splits").querySelectorAll("input")) {
+      for (const input of $("custom-splits").querySelectorAll("input[data-name]")) {
         const v = parseAmount(input.value) || 0;
         splits[input.dataset.name] = v;
         sum += v;
@@ -1569,6 +1688,17 @@ function bindEvents() {
       if (Math.abs(sum - amount) >= 1)
         return showError($("expense-error"), "Tổng các phần chưa khớp số tiền. Xem dòng kiểm tra bên trên nhé.");
       entry.splits = splits;
+    }
+
+    if (state.splitMode === "shares") {
+      const shares = readShares();
+      const eaters = Object.keys(shares).filter((n) => shares[n] > 0);
+      if (eaters.length === 0)
+        return showError($("expense-error"), "Cần ít nhất 1 phần nhé!");
+      entry.participants = eaters;           // người 0 phần thì không tính
+      entry.splits = splitsFromShares(amount, shares);
+      entry.shares = {};
+      eaters.forEach((n) => (entry.shares[n] = shares[n]));
     }
 
     const btn = e.target.querySelector('[type="submit"]');
