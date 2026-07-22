@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#fdfbf3">
+  <title>Sổ Nợ Nhóm — Chia tiền kiểu Splitwise</title>
+  <meta name="description" content="Sổ nợ nhóm theo flow Splitwise: nhiều nhóm, tổng quan ai nợ ai, settle up. Miễn phí, đồng bộ real-time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Itim&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════════
+   SỔ NỢ NHÓM — flow Splitwise, da "sổ nợ giấy kẻ ô"
+   Mobile-first · Physical-to-Digital
+   ═══════════════════════════════════════════════ */
+
+:root {
+  --paper: #fdfbf3;
+  --grid-line: #cfe3d8;
+  --margin-red: #e8938c;
+  --ink: #2b3a55;
+  --ink-soft: #6b7a94;
+  --pen-red: #d64541;
+  --pen-green: #2e7d5b;
+  --highlight: #fff3b0;
+  --card: #fffdf6;
+  --shadow: 0 2px 10px rgba(43, 58, 85, .10);
+  --radius: 12px;
+  --nav-h: 62px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  color: var(--ink);
+  min-height: 100dvh;
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
+}
+
+/* Lề đỏ dọc như trang vở */
+body::before {
+  content: "";
+  position: fixed; top: 0; bottom: 0; left: 18px;
+  width: 2px; background: var(--margin-red);
+  opacity: .55; pointer-events: none; z-index: 0;
+}
+
+.hidden { display: none !important; }
+
+.screen { display: none; min-height: 100dvh; position: relative; z-index: 1; }
+.screen.active { display: block; }
+
+/* ═══════ MÀN NHẬP TÊN ═══════ */
+.notebook-cover { max-width: 440px; margin: 0 auto; padding: 48px 20px 32px; }
+.cover-label { text-align: center; margin-bottom: 26px; }
+
+.cover-kicker {
+  display: inline-block; font-size: 13px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-soft);
+  border: 1.5px dashed var(--ink-soft); border-radius: 999px;
+  padding: 4px 14px; background: var(--card);
+}
+
+.cover-title {
+  font-family: "Itim", cursive; font-size: 46px; line-height: 1.1;
+  margin: 14px 0 6px;
+  background: linear-gradient(transparent 62%, var(--highlight) 62%, var(--highlight) 92%, transparent 92%);
+  display: inline-block; padding: 0 8px; transform: rotate(-1deg);
+}
+
+.cover-sub { font-family: "Itim", cursive; font-size: 17px; color: var(--ink-soft); }
+
+.login-card {
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 20px 18px;
+}
+
+.login-form { display: flex; flex-direction: column; gap: 14px; }
+
+/* ═══════ FORM CHUNG ═══════ */
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field-label {
+  font-size: 13.5px; font-weight: 600; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+input[type="text"], select {
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: transparent; border: none;
+  border-bottom: 2px dashed var(--ink-soft);
+  padding: 8px 4px; outline: none; border-radius: 0;
+  -webkit-appearance: none; appearance: none;
+}
+input:focus, select:focus { border-bottom: 2px solid var(--ink); }
+
+select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232b3a55' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 6px center;
+  padding-right: 26px;
+}
+
+.input-code { text-transform: uppercase; letter-spacing: .18em; font-weight: 700; }
+
+.amount-preview { font-family: "Itim", cursive; font-size: 15px; color: var(--pen-green); min-height: 18px; }
+
+/* ═══════ NÚT ═══════ */
+.btn-primary {
+  font-family: "Itim", cursive; font-size: 19px;
+  color: var(--paper); background: var(--ink);
+  border: none; border-radius: 10px; padding: 13px; cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(43, 58, 85, .3);
+  transition: transform .08s;
+}
+.btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(43, 58, 85, .3); }
+
+.btn-ghost {
+  font-family: inherit; font-size: 14px; color: var(--ink-soft);
+  background: transparent; border: 1.5px dashed var(--ink-soft);
+  border-radius: 8px; padding: 8px 12px; cursor: pointer;
+}
+
+.btn-small {
+  font-family: "Itim", cursive; font-size: 16px;
+  background: var(--highlight); border: 1.5px solid var(--ink);
+  border-radius: 10px; padding: 11px 16px; cursor: pointer; color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.btn-small:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+
+.btn-link {
+  font-family: inherit; font-size: 12.5px; color: var(--pen-green);
+  background: none; border: none; text-decoration: underline dashed; cursor: pointer;
+}
+
+.error-msg {
+  color: var(--pen-red); font-size: 14px;
+  font-family: "Itim", cursive; text-align: center; margin-top: 10px;
+}
+
+/* ═══════ HEADER ═══════ */
+.app-header {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px 12px 30px;
+  background: rgba(253, 251, 243, .92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.btn-back {
+  font-family: "Itim", cursive; font-size: 30px; line-height: 1;
+  color: var(--ink); background: none; border: none;
+  cursor: pointer; padding: 0 8px 4px 0;
+}
+
+.group-name {
+  font-family: "Itim", cursive; font-size: 22px; line-height: 1.15;
+  max-width: 62vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.group-code {
+  font-size: 12.5px; color: var(--ink-soft);
+  background: var(--highlight); border: 1px solid var(--ink);
+  border-radius: 6px; padding: 2px 8px; cursor: pointer; font-family: inherit;
+}
+.group-code strong { letter-spacing: .1em; color: var(--ink); }
+
+/* ═══════ VÙNG NỘI DUNG ═══════ */
+.page-area {
+  max-width: 560px; margin: 0 auto;
+  padding: 16px 16px calc(var(--nav-h) + 90px) 30px;
+}
+.page-area--group { padding-bottom: 110px; }
+
+.tab-page { display: none; }
+.tab-page.active { display: block; animation: page-in .2s ease; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ═══════ TRANG CHỦ: DANH SÁCH NHÓM (Splitwise Groups) ═══════ */
+.overall-balance {
+  font-family: "Itim", cursive; font-size: 20px;
+  margin-bottom: 16px; padding: 0 4px;
+}
+.overall-balance.positive { color: var(--pen-green); }
+.overall-balance.negative { color: var(--pen-red); }
+.overall-balance.zero { color: var(--ink-soft); }
+
+.group-cards { display: flex; flex-direction: column; gap: 12px; }
+
+.group-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 3px 3px 0 var(--ink);
+  padding: 14px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  width: 100%;
+  transition: transform .08s;
+}
+.group-card:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+
+.group-card-icon {
+  width: 46px; height: 46px; flex-shrink: 0;
+  border-radius: 10px;
+  background: var(--highlight);
+  border: 1.5px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+
+.group-card-info { flex: 1; min-width: 0; }
+.group-card-name {
+  font-family: "Itim", cursive; font-size: 19px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.group-card-status { font-size: 13px; margin-top: 2px; }
+.group-card-status.positive { color: var(--pen-green); font-weight: 600; }
+.group-card-status.negative { color: var(--pen-red); font-weight: 600; }
+.group-card-status.zero { color: var(--ink-soft); }
+.group-card-arrow { font-family: "Itim", cursive; font-size: 24px; color: var(--ink-soft); }
+
+.home-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.home-actions .btn-small { flex: 1; min-width: 150px; }
+
+/* ═══════ HÀNG NÚT TRÒN (Settle up · Balances · Totals) ═══════ */
+.pill-row {
+  display: flex; gap: 8px;
+  max-width: 560px; margin: 0 auto;
+  padding: 12px 16px 0 30px;
+  overflow-x: auto;
+}
+
+.pill-btn {
+  font-family: "Itim", cursive; font-size: 15.5px;
+  color: var(--ink); background: var(--card);
+  border: 1.5px solid var(--ink); border-radius: 999px;
+  padding: 9px 16px; cursor: pointer; white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.pill-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+
+/* ═══════ TRẠNG THÁI CÁ NHÂN TRONG NHÓM ═══════ */
+.my-group-status {
+  font-family: "Itim", cursive; font-size: 17px;
+  margin-bottom: 14px; padding: 0 4px;
+}
+.my-group-status.positive { color: var(--pen-green); }
+.my-group-status.negative { color: var(--pen-red); }
+.my-group-status.zero { color: var(--ink-soft); }
+
+/* ═══════ FEED KIỂU SPLITWISE ═══════ */
+.feed { display: flex; flex-direction: column; gap: 10px; }
+
+.month-heading {
+  font-family: "Itim", cursive; font-size: 16px; color: var(--ink-soft);
+  margin: 10px 0 0; padding-left: 4px;
+  display: inline-block;
+  background: linear-gradient(transparent 60%, var(--highlight) 60%, var(--highlight) 95%, transparent 95%);
+}
+
+.feed-row {
+  display: flex; align-items: center; gap: 11px;
+  background: var(--card);
+  border: 1px solid rgba(43, 58, 85, .3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+}
+
+/* Ô ngày bên trái như Splitwise */
+.feed-date {
+  flex-shrink: 0; width: 40px; text-align: center;
+  border-right: 1.5px dashed var(--grid-line); padding-right: 9px;
+}
+.feed-date .d { font-family: "Itim", cursive; font-size: 19px; line-height: 1.1; }
+.feed-date .m { font-size: 10.5px; color: var(--ink-soft); text-transform: lowercase; }
+
+.feed-main { flex: 1; min-width: 0; }
+.feed-title {
+  font-family: "Itim", cursive; font-size: 16.5px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.feed-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
+
+/* Nhãn phải: bạn cho mượn / bạn nợ */
+.feed-right { flex-shrink: 0; text-align: right; }
+.feed-right .lbl { font-size: 10.5px; display: block; }
+.feed-right .amt { font-weight: 700; font-size: 14px; }
+.feed-right.lent { color: var(--pen-green); }
+.feed-right.owe { color: var(--pen-red); }
+.feed-right.none { color: var(--ink-soft); }
+.feed-right.none .amt { font-weight: 400; font-size: 12px; }
+
+.feed-row.settlement { border-style: dashed; background: rgba(46, 125, 91, .05); }
+
+.feed-del {
+  position: absolute; top: 4px; right: 6px;
+  font-size: 11px; color: var(--ink-soft);
+  background: none; border: none; cursor: pointer; padding: 3px;
+  font-family: inherit; opacity: .6;
+}
+
+/* ═══════ HOẠT ĐỘNG ═══════ */
+.activity-list { display: flex; flex-direction: column; gap: 10px; }
+.activity-row {
+  background: var(--card);
+  border: 1px solid rgba(43, 58, 85, .3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px; line-height: 1.5;
+}
+.activity-row b { color: var(--ink); }
+.activity-row .act-group { color: var(--pen-green); font-weight: 600; }
+.activity-time { display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
+
+/* ═══════ TỔNG KẾT / SỐ DƯ ═══════ */
+.total-amount { font-family: "Itim", cursive; font-size: 36px; color: var(--ink); }
+
+.balance-list, .settle-list, .member-list { display: flex; flex-direction: column; gap: 8px; }
+
+.balance-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--card);
+  border: 1px solid rgba(43, 58, 85, .25);
+  border-left: 4px solid var(--ink-soft);
+  border-radius: 8px;
+  padding: 10px 12px; font-size: 15px;
+}
+.balance-row.positive { border-left-color: var(--pen-green); }
+.balance-row.negative { border-left-color: var(--pen-red); }
+.balance-val { font-weight: 700; }
+.balance-row.positive .balance-val { color: var(--pen-green); }
+.balance-row.negative .balance-val { color: var(--pen-red); }
+
+.settle-row {
+  background: var(--card);
+  border: 1.5px dashed var(--ink);
+  border-radius: 10px;
+  padding: 12px 14px; font-size: 15.5px; line-height: 1.5;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.settle-row .settle-text { flex: 1; min-width: 180px; }
+.settle-row .who { font-weight: 700; }
+.settle-row .money {
+  font-family: "Itim", cursive; font-size: 18px; color: var(--pen-red);
+  background: linear-gradient(transparent 55%, var(--highlight) 55%, var(--highlight) 95%, transparent 95%);
+  padding: 0 4px;
+}
+
+.btn-settle {
+  font-family: "Itim", cursive; font-size: 15px;
+  color: var(--paper); background: var(--pen-green);
+  border: 1.5px solid var(--ink); border-radius: 8px;
+  padding: 8px 13px; cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink); white-space: nowrap;
+}
+.btn-settle:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
+
+.settle-done {
+  text-align: center; font-family: "Itim", cursive; font-size: 17px;
+  color: var(--pen-green); padding: 16px;
+  border: 1.5px dashed var(--pen-green); border-radius: 10px;
+  background: var(--card);
+}
+
+/* ═══════ THÀNH VIÊN / TÀI KHOẢN ═══════ */
+.summary-block { margin-bottom: 26px; }
+
+.ruled-heading {
+  font-family: "Itim", cursive; font-size: 19px; margin-bottom: 12px;
+  display: inline-block;
+  background: linear-gradient(transparent 60%, var(--highlight) 60%, var(--highlight) 95%, transparent 95%);
+  padding: 0 6px;
+}
+
+.member-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card);
+  border: 1px solid rgba(43, 58, 85, .25);
+  border-radius: 8px;
+  padding: 10px 12px; font-size: 15px;
+}
+
+.member-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--highlight); border: 1.5px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Itim", cursive; font-size: 16px; flex-shrink: 0;
+}
+
+.member-you {
+  margin-left: auto; font-size: 11.5px; color: var(--paper);
+  background: var(--pen-green); border-radius: 999px; padding: 2px 8px;
+}
+
+.member-leave {
+  margin-left: auto; font-size: 12px; color: var(--pen-red);
+  background: none; border: none; text-decoration: underline dashed;
+  cursor: pointer; font-family: inherit;
+}
+
+.add-member-row { display: flex; gap: 8px; margin-top: 14px; align-items: flex-end; }
+.add-member-row input { flex: 1; }
+
+.hint { font-size: 12.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.5; }
+
+.empty-state {
+  text-align: center; margin-top: 60px; color: var(--ink-soft);
+  font-family: "Itim", cursive; font-size: 17px; line-height: 1.6;
+}
+.empty-doodle { font-size: 44px; margin-bottom: 8px; }
+
+/* ═══════ FAB + NAV ═══════ */
+.fab {
+  position: fixed; right: 16px; bottom: calc(var(--nav-h) + 16px); z-index: 25;
+  font-family: "Itim", cursive; font-size: 18px;
+  color: var(--paper); background: var(--pen-red);
+  border: 2px solid var(--ink); border-radius: 999px;
+  padding: 13px 20px; cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform .08s;
+}
+#screen-group .fab { bottom: 20px; }
+.fab:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+
+.bottom-nav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 25;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  background: var(--card);
+  border-top: 1.5px solid var(--ink);
+}
+
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-family: inherit; font-size: 12px; color: var(--ink-soft);
+  background: none; border: none; cursor: pointer;
+}
+.nav-btn .nav-icon { font-size: 20px; }
+.nav-btn.active { color: var(--ink); font-weight: 700; }
+
+/* ═══════ TAB TRONG MODAL ═══════ */
+.tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
+
+.tab-btn {
+  flex: 1; font-family: "Itim", cursive; font-size: 16px;
+  padding: 10px; background: transparent; color: var(--ink-soft);
+  border: 1.5px dashed var(--ink-soft); border-radius: 10px; cursor: pointer;
+}
+.tab-btn.active { background: var(--highlight); color: var(--ink); border: 1.5px solid var(--ink); }
+
+/* ═══════ MODAL SHEET ═══════ */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(43, 58, 85, .45);
+  z-index: 50;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+
+.modal-sheet {
+  width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto;
+  background: var(--card);
+  background-image: linear-gradient(rgba(207, 227, 216, .5) 1px, transparent 1px);
+  background-size: 100% 26px;
+  border: 1.5px solid var(--ink); border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  padding: 10px 18px calc(24px + env(safe-area-inset-bottom));
+  animation: sheet-up .22s ease;
+}
+@keyframes sheet-up { from { transform: translateY(40%); } to { transform: none; } }
+
+.modal-handle {
+  width: 44px; height: 5px; background: var(--ink-soft); opacity: .4;
+  border-radius: 999px; margin: 4px auto 12px;
+}
+
+.modal-title { font-family: "Itim", cursive; font-size: 22px; margin-bottom: 14px; }
+
+#form-expense { display: flex; flex-direction: column; gap: 16px; }
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px; margin-top: 4px;
+}
+
+.check-chip {
+  display: flex; align-items: center; gap: 7px;
+  border: 1.5px dashed var(--ink-soft); border-radius: 8px;
+  padding: 9px 10px; font-size: 14.5px; cursor: pointer;
+  background: transparent; user-select: none;
+}
+.check-chip input { accent-color: var(--pen-green); width: 17px; height: 17px; margin: 0; }
+.check-chip:has(input:checked) {
+  border: 1.5px solid var(--pen-green);
+  background: rgba(46, 125, 91, .08);
+}
+
+.custom-splits { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.custom-split-row {
+  display: flex; align-items: center; gap: 10px;
+  border: 1px dashed var(--ink-soft); border-radius: 8px; padding: 7px 10px;
+}
+.custom-split-row span { flex: 1; font-size: 14.5px; }
+.custom-split-row input { width: 110px; text-align: right; font-weight: 600; }
+
+.split-check { font-family: "Itim", cursive; font-size: 14px; margin-top: 8px; min-height: 18px; }
+.split-check.ok { color: var(--pen-green); }
+.split-check.bad { color: var(--pen-red); }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+.modal-actions .btn-ghost { flex: 1; }
+.modal-actions .btn-primary { flex: 2; }
+
+/* ═══════ TOAST ═══════ */
+.toast {
+  position: fixed; left: 50%; bottom: calc(var(--nav-h) + 80px);
+  transform: translateX(-50%); z-index: 60;
+  font-family: "Itim", cursive; font-size: 15px;
+  color: var(--paper); background: var(--ink);
+  border-radius: 999px; padding: 10px 20px;
+  box-shadow: var(--shadow); max-width: 88vw; text-align: center;
+  animation: page-in .2s ease;
+}
+
+@media (min-width: 600px) {
+  .cover-title { font-size: 54px; }
+  .fab { right: calc(50vw - 280px + 16px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+/* ═══════ MODAL XÁC NHẬN ═══════ */
+.modal-sheet--small { max-width: 420px; border-radius: 18px; border-bottom: 1.5px solid var(--ink); margin-bottom: 20vh; }
+.modal-backdrop:has(.modal-sheet--small) { align-items: center; }
+.confirm-text { font-family: "Itim", cursive; font-size: 17.5px; line-height: 1.5; margin: 6px 4px 18px; text-align: center; }
+
+</style>
+</head>
+<body>
+
+<!-- ═════ MÀN 1: NHẬP TÊN LẦN ĐẦU ═════ -->
+<section id="screen-onboard" class="screen">
+  <div class="notebook-cover">
+    <div class="cover-label">
+      <div class="cover-kicker">Cuốn sổ ghi chung</div>
+      <h1 class="cover-title">Sổ Nợ Nhóm</h1>
+      <p class="cover-sub">Đi chơi cứ vui — tiền nong đã có sổ lo.</p>
+    </div>
+    <div class="login-card">
+      <form id="form-onboard" class="login-form">
+        <label class="field">
+          <span class="field-label">Bạn tên gì? (bạn bè sẽ thấy tên này trong sổ)</span>
+          <input type="text" id="onboard-name" placeholder="Ví dụ: Tú" maxlength="20" autocomplete="off" required>
+        </label>
+        <button type="submit" class="btn-primary">Bắt đầu →</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ═════ MÀN 2: TRANG CHỦ (3 TAB) ═════ -->
+<section id="screen-home" class="screen">
+  <header class="app-header">
+    <h2 class="group-name" id="home-title">Nhóm của bạn</h2>
+  </header>
+
+  <div id="mode-banner" class="mode-banner hidden"></div>
+
+  <main class="page-area">
+    <!-- TAB NHÓM: danh sách nhóm như Splitwise Groups -->
+    <div id="tab-groups" class="tab-page active">
+      <p id="overall-balance" class="overall-balance">…</p>
+      <div id="group-cards" class="group-cards"></div>
+
+      <div id="groups-empty" class="empty-state hidden">
+        <div class="empty-doodle">✎</div>
+        <p>Chưa có sổ nào.<br>Lập sổ mới hoặc nhập mã bạn bè gửi nhé!</p>
+      </div>
+
+      <div class="home-actions">
+        <button id="btn-open-create" class="btn-small">＋ Lập sổ mới</button>
+        <button id="btn-open-join" class="btn-small">⌗ Nhập mã vào nhóm</button>
+      </div>
+    </div>
+
+    <!-- TAB HOẠT ĐỘNG: feed như Splitwise Activity -->
+    <div id="tab-activity" class="tab-page">
+      <div id="activity-list" class="activity-list"></div>
+      <div id="activity-empty" class="empty-state hidden">
+        <div class="empty-doodle">🕰</div>
+        <p>Chưa có hoạt động nào.</p>
+      </div>
+    </div>
+
+    <!-- TAB TÀI KHOẢN -->
+    <div id="tab-account" class="tab-page">
+      <div class="summary-block">
+        <h3 class="ruled-heading">Tài khoản</h3>
+        <div class="member-row">
+          <span class="member-avatar" id="account-avatar">?</span>
+          <span id="account-name">…</span>
+          <span class="member-you">bạn</span>
+        </div>
+        <p class="hint">Tên là "chữ ký" của bạn trong mọi cuốn sổ. Muốn đổi tên, hãy rời app và vào lại (dữ liệu nhóm vẫn còn nguyên).</p>
+      </div>
+      <div class="summary-block">
+        <h3 class="ruled-heading">Sổ đang tham gia</h3>
+        <div id="account-groups" class="member-list"></div>
+      </div>
+      <button id="btn-reset" class="btn-ghost">Rời app (xóa tên khỏi máy này)</button>
+    </div>
+  </main>
+
+  <button id="btn-fab-home" class="fab">＋ Ghi khoản chi</button>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="tab-groups"><span class="nav-icon">🧾</span><span>Nhóm</span></button>
+    <button class="nav-btn" data-tab="tab-activity"><span class="nav-icon">🕰</span><span>Hoạt động</span></button>
+    <button class="nav-btn" data-tab="tab-account"><span class="nav-icon">👤</span><span>Tài khoản</span></button>
+  </nav>
+</section>
+
+<!-- ═════ MÀN 3: CHI TIẾT NHÓM ═════ -->
+<section id="screen-group" class="screen">
+  <header class="app-header">
+    <button id="btn-back" class="btn-back" aria-label="Quay lại">‹</button>
+    <div class="header-info">
+      <h2 id="group-name" class="group-name">…</h2>
+      <button id="btn-copy-code" class="group-code" title="Chạm để sao chép mã">
+        Mã: <strong id="group-code-text">…</strong> ⧉
+      </button>
+    </div>
+  </header>
+
+  <!-- Hàng nút tròn kiểu Splitwise: Settle up · Balances · Totals -->
+  <div class="pill-row">
+    <button id="btn-pill-settle" class="pill-btn">⚖️ Cấn nợ</button>
+    <button id="btn-pill-balances" class="pill-btn">👥 Số dư</button>
+    <button id="btn-pill-totals" class="pill-btn">∑ Tổng chi</button>
+  </div>
+
+  <main class="page-area page-area--group">
+    <div id="my-group-status" class="my-group-status">…</div>
+    <div id="group-feed" class="feed"></div>
+    <div id="group-empty" class="empty-state hidden">
+      <div class="empty-doodle">✎</div>
+      <p>Sổ còn trắng tinh.<br>Bấm <strong>＋ Ghi khoản chi</strong> để mở hàng!</p>
+    </div>
+  </main>
+
+  <button id="btn-fab-group" class="fab">＋ Ghi khoản chi</button>
+</section>
+
+<!-- ═════ MODAL: LẬP SỔ / NHẬP MÃ ═════ -->
+<div id="modal-join" class="modal-backdrop hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="tab-row" role="tablist">
+      <button class="tab-btn active" data-join-tab="join">Nhập mã vào nhóm</button>
+      <button class="tab-btn" data-join-tab="create">Lập sổ mới</button>
+    </div>
+
+    <form id="form-join" class="login-form">
+      <label class="field">
+        <span class="field-label">Mã nhóm (bạn bè gửi cho bạn)</span>
+        <input type="text" id="join-code" placeholder="Ví dụ: A7K2MX" maxlength="10" autocomplete="off" class="input-code" required>
+      </label>
+      <button type="submit" class="btn-primary">Mở sổ →</button>
+    </form>
+
+    <form id="form-create" class="login-form hidden">
+      <label class="field">
+        <span class="field-label">Tên chuyến đi / nhóm</span>
+        <input type="text" id="create-group" placeholder="Ví dụ: Đà Lạt 30/4" maxlength="40" autocomplete="off" required>
+      </label>
+      <button type="submit" class="btn-primary">Lập sổ mới ✎</button>
+    </form>
+
+    <p id="join-error" class="error-msg hidden"></p>
+  </div>
+</div>
+
+<!-- ═════ MODAL: GHI KHOẢN CHI ═════ -->
+<div id="modal-expense" class="modal-backdrop hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">✎ Ghi khoản chi mới</h3>
+    <form id="form-expense">
+      <label class="field">
+        <span class="field-label">Cùng nhóm</span>
+        <select id="exp-group" required></select>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Chi cho việc gì?</span>
+        <input type="text" id="exp-desc" placeholder="Ví dụ: Ăn hải sản tối" maxlength="60" autocomplete="off" required>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Số tiền (₫) — gõ 250 hoặc 250k đều hiểu</span>
+        <input type="text" id="exp-amount" placeholder="Ví dụ: 250k" inputmode="numeric" autocomplete="off" required>
+        <span id="exp-amount-preview" class="amount-preview"></span>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Ai trả tiền?</span>
+        <select id="exp-payer" required></select>
+      </label>
+
+      <div class="field">
+        <span class="field-label">Chia cho những ai? <button type="button" id="btn-check-all" class="btn-link">Chọn hết / Bỏ hết</button></span>
+        <div id="exp-participants" class="checkbox-grid"></div>
+      </div>
+
+      <div class="field">
+        <span class="field-label">Chia kiểu gì?</span>
+        <div class="tab-row">
+          <button type="button" class="tab-btn split-mode active" data-split="equal">Chia đều</button>
+          <button type="button" class="tab-btn split-mode" data-split="custom">Mỗi người một khoản</button>
+        </div>
+        <div id="custom-splits" class="custom-splits hidden"></div>
+        <p id="split-check" class="split-check"></p>
+      </div>
+
+      <p id="expense-error" class="error-msg hidden"></p>
+
+      <div class="modal-actions">
+        <button type="button" id="btn-cancel-expense" class="btn-ghost">Thôi</button>
+        <button type="submit" class="btn-primary">Ghi vào sổ ✓</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═════ MODAL: CẤN NỢ (SETTLE UP) ═════ -->
+<div id="modal-settle" class="modal-backdrop hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">⚖️ Cấn nợ tối ưu</h3>
+    <p class="hint" style="margin-bottom:12px">Ít lần chuyển khoản nhất có thể. Chuyển xong bấm <b>✓ Đã chuyển</b> để sổ tự trừ.</p>
+    <div id="settle-list" class="settle-list"></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL: SỐ DƯ ═════ -->
+<div id="modal-balances" class="modal-backdrop hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">👥 Số dư từng người</h3>
+    <div id="balance-list" class="balance-list"></div>
+    <form id="form-add-member" class="add-member-row">
+      <input type="text" id="new-member-name" placeholder="Thêm người vào sổ" maxlength="20" autocomplete="off">
+      <button type="submit" class="btn-small">Thêm</button>
+    </form>
+    <p class="hint">Gửi mã nhóm cho bạn bè — ai vào bằng mã sẽ tự có tên trong sổ.</p>
+  </div>
+</div>
+
+<!-- ═════ MODAL: TỔNG CHI ═════ -->
+<div id="modal-totals" class="modal-backdrop hidden">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <h3 class="modal-title">∑ Tổng chi của nhóm</h3>
+    <p id="totals-amount" class="total-amount">0 ₫</p>
+    <div id="totals-list" class="balance-list" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ═════ MODAL XÁC NHẬN ═════ -->
+<div id="modal-confirm" class="modal-backdrop hidden">
+  <div class="modal-sheet modal-sheet--small">
+    <div class="modal-handle"></div>
+    <p id="confirm-text" class="confirm-text">…</p>
+    <div class="modal-actions">
+      <button type="button" id="btn-confirm-no" class="btn-ghost">Thôi</button>
+      <button type="button" id="btn-confirm-yes" class="btn-primary">Đồng ý ✓</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+/* ═══════════════════════════════════════════════════════════
+   SỔ NỢ NHÓM — flow chuẩn Splitwise
+   2 chế độ: ☁️ Firebase (đồng bộ real-time) / 📱 chạy thử trên máy
+   ═══════════════════════════════════════════════════════════ */
+
+// ▼▼▼ BƯỚC DUY NHẤT ĐỂ BẬT ĐỒNG BỘ NHÓM: dán firebaseConfig vào đây ▼▼▼
+const firebaseConfig = {
+  apiKey: "AIzaSyCqDpG5m9wtB9GnZlZ0iVia1ApF5C67m9w",
+  authDomain: "so-no-nhom.firebaseapp.com",
+  projectId: "so-no-nhom",
+  storageBucket: "so-no-nhom.firebasestorage.app",
+  messagingSenderId: "946756302746",
+  appId: "1:946756302746:web:4e8fde13d962515cba2c23"
+};
+// ▲▲▲ Chưa dán vẫn dùng được: app chạy chế độ thử, lưu trên máy này ▲▲▲
+
+const FORCE_OFFLINE = false; // bản test-offline sẽ là true
+
+
+/* Bộ nhớ an toàn: nơi nào chặn localStorage (iframe preview) thì dùng bộ nhớ tạm */
+const store = (() => {
+  try {
+    const t = "__sono_test__";
+    window.localStorage.setItem(t, "1");
+    window.localStorage.removeItem(t);
+    return window.localStorage;
+  } catch {
+    const mem = {};
+    return {
+      getItem: (k) => (k in mem ? mem[k] : null),
+      setItem: (k, v) => { mem[k] = String(v); },
+      removeItem: (k) => { delete mem[k]; },
+    };
+  }
+})();
+
+/* Hộp thoại xác nhận trong app (confirm() hệ thống bị chặn trong iframe) */
+function askConfirm(msg) {
+  return new Promise((resolve) => {
+    document.getElementById("confirm-text").textContent = msg;
+    const modal = document.getElementById("modal-confirm");
+    modal.classList.remove("hidden");
+    const yes = document.getElementById("btn-confirm-yes");
+    const no = document.getElementById("btn-confirm-no");
+    const done = (v) => { modal.classList.add("hidden"); yes.onclick = no.onclick = null; resolve(v); };
+    yes.onclick = () => done(true);
+    no.onclick = () => done(false);
+  });
+}
+
+/* ─────────────── LỚP DỮ LIỆU: CLOUD hoặc LOCAL ─────────────── */
+let api = null;
+let MODE = "local";
+
+function firebaseApi(db, fs) {
+  return {
+    async getGroup(code) {
+      const s = await fs.getDoc(fs.doc(db, "groups", code));
+      return s.exists() ? s.data() : null;
+    },
+    async createGroup(code, name, member) {
+      await fs.setDoc(fs.doc(db, "groups", code),
+        { name, members: [member], createdAt: fs.serverTimestamp() });
+    },
+    async addMember(code, n) {
+      await fs.updateDoc(fs.doc(db, "groups", code), { members: fs.arrayUnion(n) });
+    },
+    watch(code, onGroup, onEntries) {
+      const u1 = fs.onSnapshot(fs.doc(db, "groups", code),
+        (s) => onGroup(s.exists() ? s.data() : null));
+      const q = fs.query(fs.collection(db, "groups", code, "expenses"),
+        fs.orderBy("createdAt", "desc"));
+      const u2 = fs.onSnapshot(q,
+        (s) => onEntries(s.docs.map((d) => ({ id: d.id, ...d.data() }))));
+      return () => { u1(); u2(); };
+    },
+    async addEntry(code, en) {
+      await fs.addDoc(fs.collection(db, "groups", code, "expenses"),
+        { ...en, createdAt: fs.serverTimestamp() });
+    },
+    async deleteEntry(code, id) {
+      await fs.deleteDoc(fs.doc(db, "groups", code, "expenses", id));
+    },
+  };
+}
+
+function localApi() {
+  const KEY = "sono_local_db";
+  const load = () => { try { return JSON.parse(store.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = (d) => store.setItem(KEY, JSON.stringify(d));
+  const listeners = {}; // code -> Set
+
+  function emit(code) {
+    const d = load()[code];
+    for (const l of listeners[code] || []) {
+      l.onGroup(d ? { name: d.name, members: d.members } : null);
+      l.onEntries(d ? [...d.entries].sort((a, b) => b.createdAt - a.createdAt) : []);
+    }
+  }
+  return {
+    async getGroup(code) {
+      const d = load()[code];
+      return d ? { name: d.name, members: d.members } : null;
+    },
+    async createGroup(code, name, member) {
+      const db = load();
+      db[code] = { name, members: [member], entries: [] };
+      save(db); emit(code);
+    },
+    async addMember(code, n) {
+      const db = load();
+      if (!db[code]) return;
+      if (!db[code].members.includes(n)) db[code].members.push(n);
+      save(db); emit(code);
+    },
+    watch(code, onGroup, onEntries) {
+      (listeners[code] ??= new Set());
+      const l = { onGroup, onEntries };
+      listeners[code].add(l);
+      queueMicrotask(() => emit(code));
+      return () => listeners[code].delete(l);
+    },
+    async addEntry(code, en) {
+      const db = load();
+      if (!db[code]) return;
+      db[code].entries.push({
+        ...en,
+        id: "e" + Date.now() + Math.random().toString(36).slice(2, 6),
+        createdAt: Date.now(),
+      });
+      save(db); emit(code);
+    },
+    async deleteEntry(code, id) {
+      const db = load();
+      if (!db[code]) return;
+      db[code].entries = db[code].entries.filter((e) => e.id !== id);
+      save(db); emit(code);
+    },
+  };
+}
+
+async function initBackend() {
+  const configured = !FORCE_OFFLINE && firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith("DÁN");
+  if (configured) {
+    try {
+      const [{ initializeApp }, fs] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"),
+      ]);
+      const fbApp = initializeApp(firebaseConfig);
+      api = firebaseApi(fs.getFirestore(fbApp), fs);
+      MODE = "cloud";
+      return;
+    } catch (e) {
+      console.warn("Không nối được Firebase, chuyển sang chạy trên máy:", e);
+    }
+  }
+  api = localApi();
+  MODE = "local";
+}
+
+/* ─────────────── TRẠNG THÁI ─────────────── */
+const state = {
+  name: null,
+  joined: [],
+  data: {},        // data[code] = { name, members, entries }
+  subs: {},
+  currentGroup: null,
+  splitMode: "equal",
+};
+
+const STORAGE_KEY = "sono_v2";
+const saveLocal = () =>
+  store.setItem(STORAGE_KEY, JSON.stringify({ name: state.name, groups: state.joined }));
+
+/* ─────────────── TIỆN ÍCH ─────────────── */
+const $ = (id) => document.getElementById(id);
+const fmtVND = (n) => Math.round(n).toLocaleString("vi-VN") + " ₫";
+
+function parseAmount(raw) {
+  let s = String(raw).trim().toLowerCase().replace(/\s|₫|đ|vnd/g, "");
+  if (!s) return null;
+  let mul = 1;
+  if (/(tr|m)$/.test(s)) { mul = 1_000_000; s = s.replace(/(tr|m)$/, ""); }
+  else if (/k$/.test(s)) { mul = 1_000; s = s.replace(/k$/, ""); }
+  if (mul > 1) s = s.replace(",", "."); else s = s.replace(/[.,]/g, "");
+  const num = parseFloat(s);
+  if (isNaN(num) || num <= 0) return null;
+  let val = num * mul;
+  if (mul === 1 && val < 1000) val *= 1000;
+  return Math.round(val);
+}
+
+function randomCode(len = 6) {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function toast(msg, ms = 2400) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.remove("hidden");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.add("hidden"), ms);
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.classList.remove("hidden");
+  setTimeout(() => el.classList.add("hidden"), 4000);
+}
+
+const escapeHTML = (s) => String(s).replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const entryDate = (ts) =>
+  ts?.toDate ? ts.toDate() : typeof ts === "number" ? new Date(ts) : new Date();
+
+function monthLabel(d) {
+  const s = d.toLocaleDateString("vi-VN", { month: "long", year: "numeric" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+const monthShort = (d) => "thg " + (d.getMonth() + 1);
+const timeShort = (ts) => entryDate(ts).toLocaleString("vi-VN",
+  { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
+
+function shareOf(entry, name) {
+  if (!entry.participants?.includes(name)) return 0;
+  if (entry.splits && entry.splits[name] != null) return entry.splits[name];
+  return entry.amount / entry.participants.length;
+}
+
+/* ─────────────── TÍNH TOÁN ─────────────── */
+function computeBalances(g) {
+  const bal = {};
+  (g?.members || []).forEach((m) => (bal[m] = 0));
+  const ensure = (n) => { if (!(n in bal)) bal[n] = 0; };
+  for (const en of g?.entries || []) {
+    if (en.type === "settlement") {
+      ensure(en.payer); ensure(en.to);
+      bal[en.payer] += en.amount;
+      bal[en.to] -= en.amount;
+    } else {
+      ensure(en.payer);
+      bal[en.payer] += en.amount;
+      for (const p of en.participants || []) { ensure(p); bal[p] -= shareOf(en, p); }
+    }
+  }
+  return bal;
+}
+
+function computeSettlements(balances) {
+  const creditors = [], debtors = [];
+  for (const [name, v] of Object.entries(balances)) {
+    if (v > 0.5) creditors.push({ name, amt: v });
+    else if (v < -0.5) debtors.push({ name, amt: -v });
+  }
+  creditors.sort((a, b) => b.amt - a.amt);
+  debtors.sort((a, b) => b.amt - a.amt);
+  const result = [];
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const pay = Math.min(debtors[i].amt, creditors[j].amt);
+    result.push({ from: debtors[i].name, to: creditors[j].name, amount: pay });
+    debtors[i].amt -= pay;
+    creditors[j].amt -= pay;
+    if (debtors[i].amt < 0.5) i++;
+    if (creditors[j].amt < 0.5) j++;
+  }
+  return result;
+}
+
+const myBalanceIn = (code) => (computeBalances(state.data[code])[state.name] || 0);
+
+/* ─────────────── ĐIỀU HƯỚNG ─────────────── */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  $(id).classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function closeAllModals() {
+  document.querySelectorAll(".modal-backdrop").forEach((m) => m.classList.add("hidden"));
+}
+
+/* ─────────────── ĐỒNG BỘ TỪNG NHÓM ─────────────── */
+function subscribeGroup(code) {
+  if (state.subs[code]) return;
+  state.data[code] = state.data[code] || { name: "…", members: [], entries: [] };
+  state.subs[code] = api.watch(code,
+    (g) => {
+      if (!g) { removeGroupLocally(code); return; }
+      state.data[code].name = g.name;
+      state.data[code].members = g.members || [];
+      renderAll();
+    },
+    (entries) => {
+      state.data[code].entries = entries;
+      renderAll();
+    });
+}
+
+function removeGroupLocally(code) {
+  state.subs[code]?.();
+  delete state.subs[code];
+  delete state.data[code];
+  state.joined = state.joined.filter((c) => c !== code);
+  saveLocal();
+  if (state.currentGroup === code) { state.currentGroup = null; showScreen("screen-home"); }
+  renderAll();
+}
+
+/* ─────────────── KHỞI ĐỘNG ─────────────── */
+function boot() {
+  if (!state.name) { showScreen("screen-onboard"); return; }
+  $("account-name").textContent = state.name;
+  $("account-avatar").textContent = state.name.charAt(0).toUpperCase();
+  showScreen("screen-home");
+  state.joined.forEach(subscribeGroup);
+  renderAll();
+}
+
+/* ─────────────── RENDER ─────────────── */
+function renderAll() {
+  renderHome();
+  renderActivity();
+  renderAccount();
+  if (state.currentGroup) renderGroup();
+}
+
+function renderHome() {
+  const cards = $("group-cards");
+
+  let overall = 0;
+  state.joined.forEach((c) => (overall += myBalanceIn(c)));
+
+  const ob = $("overall-balance");
+  if (state.joined.length === 0) {
+    ob.textContent = "";
+    ob.className = "overall-balance";
+  } else if (overall > 0.5) {
+    ob.textContent = `Tính chung, bạn được nhận lại ${fmtVND(overall)}`;
+    ob.className = "overall-balance positive";
+  } else if (overall < -0.5) {
+    ob.textContent = `Tính chung, bạn còn nợ ${fmtVND(-overall)}`;
+    ob.className = "overall-balance negative";
+  } else {
+    ob.textContent = "Tính chung, bạn đang cân bằng ✓";
+    ob.className = "overall-balance zero";
+  }
+
+  $("groups-empty").classList.toggle("hidden", state.joined.length !== 0);
+
+  cards.innerHTML = state.joined.map((c) => {
+    const g = state.data[c] || { name: c, members: [] };
+    const mine = myBalanceIn(c);
+    let cls = "zero", txt = "đã cân bằng ✓";
+    if (mine > 0.5) { cls = "positive"; txt = `bạn được nhận ${fmtVND(mine)}`; }
+    else if (mine < -0.5) { cls = "negative"; txt = `bạn còn nợ ${fmtVND(-mine)}`; }
+    return `
+      <button class="group-card" data-open="${c}">
+        <span class="group-card-icon">📒</span>
+        <span class="group-card-info">
+          <span class="group-card-name">${escapeHTML(g.name)}</span>
+          <span class="group-card-status ${cls}">${txt} · ${g.members.length} người</span>
+        </span>
+        <span class="group-card-arrow">›</span>
+      </button>`;
+  }).join("");
+
+  cards.querySelectorAll("[data-open]").forEach((btn) =>
+    btn.addEventListener("click", () => openGroup(btn.dataset.open)));
+}
+
+function openGroup(code) {
+  state.currentGroup = code;
+  showScreen("screen-group");
+  renderGroup();
+}
+
+function renderGroup() {
+  const code = state.currentGroup;
+  const g = state.data[code];
+  if (!g) return;
+
+  $("group-name").textContent = g.name;
+  $("group-code-text").textContent = code;
+
+  const mine = myBalanceIn(code);
+  const st = $("my-group-status");
+  if (mine > 0.5) { st.textContent = `Trong sổ này, bạn được nhận lại ${fmtVND(mine)}`; st.className = "my-group-status positive"; }
+  else if (mine < -0.5) { st.textContent = `Trong sổ này, bạn còn nợ ${fmtVND(-mine)}`; st.className = "my-group-status negative"; }
+  else { st.textContent = "Trong sổ này, bạn đang cân bằng ✓"; st.className = "my-group-status zero"; }
+
+  const feed = $("group-feed");
+  const empty = $("group-empty");
+  if (!g.entries.length) { feed.innerHTML = ""; empty.classList.remove("hidden"); return; }
+  empty.classList.add("hidden");
+
+  const me = state.name;
+  let html = "", lastMonth = "";
+
+  for (const en of g.entries) {
+    const d = entryDate(en.createdAt);
+    const mLabel = monthLabel(d);
+    if (mLabel !== lastMonth) { html += `<p class="month-heading">${mLabel}</p>`; lastMonth = mLabel; }
+
+    const dateBlock = `<span class="feed-date"><span class="d">${d.getDate()}</span><br><span class="m">${monthShort(d)}</span></span>`;
+
+    if (en.type === "settlement") {
+      html += `
+        <div class="feed-row settlement">
+          ${dateBlock}
+          <span class="feed-main">
+            <span class="feed-title">💸 Chuyển tiền cấn nợ</span>
+            <span class="feed-sub">${escapeHTML(en.payer)} đã chuyển cho ${escapeHTML(en.to)}</span>
+          </span>
+          <span class="feed-right lent"><span class="lbl">&nbsp;</span><span class="amt">${fmtVND(en.amount)}</span></span>
+          <button class="feed-del" data-del="${en.id}" data-label="chuyển tiền ${escapeHTML(en.payer)} → ${escapeHTML(en.to)}">✕</button>
+        </div>`;
+      continue;
+    }
+
+    const myShare = shareOf(en, me);
+    let right;
+    if (en.payer === me) {
+      const lent = en.amount - myShare;
+      right = lent > 0.5
+        ? `<span class="feed-right lent"><span class="lbl">bạn cho mượn</span><span class="amt">${fmtVND(lent)}</span></span>`
+        : `<span class="feed-right none"><span class="lbl">bạn tự trả</span><span class="amt">phần mình</span></span>`;
+    } else if (myShare > 0) {
+      right = `<span class="feed-right owe"><span class="lbl">bạn nợ</span><span class="amt">${fmtVND(myShare)}</span></span>`;
+    } else {
+      right = `<span class="feed-right none"><span class="lbl">bạn</span><span class="amt">không tham gia</span></span>`;
+    }
+
+    html += `
+      <div class="feed-row">
+        ${dateBlock}
+        <span class="feed-main">
+          <span class="feed-title">${escapeHTML(en.desc)}</span>
+          <span class="feed-sub">${escapeHTML(en.payer)} đã trả ${fmtVND(en.amount)} · chia ${en.participants.length} người</span>
+        </span>
+        ${right}
+        <button class="feed-del" data-del="${en.id}" data-label="${escapeHTML(en.desc)}">✕</button>
+      </div>`;
+  }
+
+  feed.innerHTML = html;
+  feed.querySelectorAll("[data-del]").forEach((btn) =>
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      deleteEntry(code, btn.dataset.del, btn.dataset.label);
+    }));
+}
+
+function renderSettleModal() {
+  const code = state.currentGroup;
+  const settlements = computeSettlements(computeBalances(state.data[code]));
+  $("settle-list").innerHTML = settlements.length === 0
+    ? `<div class="settle-done">🎉 Cả nhóm đã cân bằng — không ai nợ ai!</div>`
+    : settlements.map((s, i) => `
+        <div class="settle-row">
+          <span class="settle-text">
+            <span class="who">${escapeHTML(s.from)}</span> chuyển cho
+            <span class="who">${escapeHTML(s.to)}</span>
+            → <span class="money">${fmtVND(s.amount)}</span>
+          </span>
+          <button class="btn-settle" data-i="${i}">✓ Đã chuyển</button>
+        </div>`).join("");
+  $("settle-list").querySelectorAll("[data-i]").forEach((btn) => {
+    const s = settlements[Number(btn.dataset.i)];
+    btn.addEventListener("click", () => recordSettlement(code, s.from, s.to, Math.round(s.amount)));
+  });
+}
+
+function renderBalancesModal() {
+  const code = state.currentGroup;
+  const balances = computeBalances(state.data[code]);
+  $("balance-list").innerHTML = Object.entries(balances)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, v]) => {
+      const cls = v > 0.5 ? "positive" : v < -0.5 ? "negative" : "";
+      const label = v > 0.5 ? `được nhận ${fmtVND(v)}` : v < -0.5 ? `còn thiếu ${fmtVND(-v)}` : "đã cân bằng ✓";
+      return `<div class="balance-row ${cls}">
+        <span>${escapeHTML(name)}${name === state.name ? " (bạn)" : ""}</span>
+        <span class="balance-val">${label}</span></div>`;
+    }).join("");
+}
+
+function renderTotalsModal() {
+  const code = state.currentGroup;
+  const g = state.data[code];
+  const expenses = (g.entries || []).filter((e) => e.type !== "settlement");
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  $("totals-amount").textContent = fmtVND(total);
+
+  const paid = {}, share = {};
+  g.members.forEach((m) => { paid[m] = 0; share[m] = 0; });
+  for (const en of expenses) {
+    paid[en.payer] = (paid[en.payer] || 0) + en.amount;
+    for (const p of en.participants) share[p] = (share[p] || 0) + shareOf(en, p);
+  }
+  $("totals-list").innerHTML = g.members.map((m) => `
+    <div class="balance-row">
+      <span>${escapeHTML(m)}${m === state.name ? " (bạn)" : ""}</span>
+      <span style="font-size:13px;text-align:right">đã trả <b>${fmtVND(paid[m] || 0)}</b><br>phần phải chịu ${fmtVND(share[m] || 0)}</span>
+    </div>`).join("");
+}
+
+function renderActivity() {
+  const rows = [];
+  for (const code of state.joined) {
+    const g = state.data[code];
+    if (!g) continue;
+    for (const en of g.entries || []) {
+      rows.push({ ...en, groupName: g.name, _t: entryDate(en.createdAt).getTime() });
+    }
+  }
+  rows.sort((a, b) => b._t - a._t);
+  const top = rows.slice(0, 40);
+
+  $("activity-empty").classList.toggle("hidden", top.length !== 0);
+  $("activity-list").innerHTML = top.map((en) => {
+    const time = `<span class="activity-time">${timeShort(en.createdAt)}</span>`;
+    if (en.type === "settlement") {
+      return `<div class="activity-row">💸 <b>${escapeHTML(en.payer)}</b> đã chuyển ${fmtVND(en.amount)} cho <b>${escapeHTML(en.to)}</b> trong <span class="act-group">${escapeHTML(en.groupName)}</span>${time}</div>`;
+    }
+    return `<div class="activity-row">🧾 <b>${escapeHTML(en.addedBy || en.payer)}</b> đã ghi «${escapeHTML(en.desc)}» ${fmtVND(en.amount)} trong <span class="act-group">${escapeHTML(en.groupName)}</span>${time}</div>`;
+  }).join("");
+}
+
+function renderAccount() {
+  $("account-groups").innerHTML = state.joined.length === 0
+    ? `<p class="hint">Chưa tham gia sổ nào.</p>`
+    : state.joined.map((c) => `
+        <div class="member-row">
+          <span class="member-avatar">📒</span>
+          <span>${escapeHTML(state.data[c]?.name || c)} <small style="color:var(--ink-soft)">(${c})</small></span>
+          <button class="member-leave" data-leave="${c}">Rời sổ</button>
+        </div>`).join("");
+  $("account-groups").querySelectorAll("[data-leave]").forEach((btn) =>
+    btn.addEventListener("click", async () => {
+      if (await askConfirm("Rời sổ này trên máy bạn? (dữ liệu nhóm vẫn còn, vào lại bằng mã)")) removeGroupLocally(btn.dataset.leave);
+    }));
+}
+
+/* ─────────────── HÀNH ĐỘNG ─────────────── */
+async function deleteEntry(code, id, label) {
+  if (!(await askConfirm(`Xóa "${label}" khỏi sổ?`))) return;
+  try { await api.deleteEntry(code, id); toast("Đã gạch khỏi sổ"); }
+  catch (err) { console.error(err); toast("Xóa không thành công"); }
+}
+
+async function recordSettlement(code, from, to, amount) {
+  if (!(await askConfirm(`Xác nhận: ${from} đã chuyển ${fmtVND(amount)} cho ${to}?`))) return;
+  try {
+    await api.addEntry(code, { type: "settlement", payer: from, to, amount, addedBy: state.name });
+    toast("Đã ghi nhận chuyển tiền ✓ Nợ tự trừ rồi nhé");
+    closeAllModals();
+  } catch (err) { console.error(err); toast("Ghi nhận không thành công"); }
+}
+
+/* ─────────────── MODAL GHI KHOẢN CHI ─────────────── */
+function openExpenseModal(presetCode) {
+  if (state.joined.length === 0) { toast("Lập sổ hoặc nhập mã vào nhóm trước đã nhé!"); return; }
+  const codes = state.joined;
+  $("exp-group").innerHTML = codes.map((c) =>
+    `<option value="${c}">${escapeHTML(state.data[c]?.name || c)}</option>`).join("");
+  $("form-expense").reset();
+  $("exp-group").value = presetCode || codes[0];
+  rebuildExpensePeople();
+  $("exp-amount-preview").textContent = "";
+  setSplitMode("equal");
+  $("modal-expense").classList.remove("hidden");
+  $("exp-desc").focus();
+}
+
+function rebuildExpensePeople() {
+  const g = state.data[$("exp-group").value] || { members: [] };
+  $("exp-payer").innerHTML = g.members.map((m) =>
+    `<option value="${escapeHTML(m)}" ${m === state.name ? "selected" : ""}>${escapeHTML(m)}</option>`).join("");
+  $("exp-participants").innerHTML = g.members.map((m) =>
+    `<label class="check-chip"><input type="checkbox" value="${escapeHTML(m)}" checked> ${escapeHTML(m)}</label>`).join("");
+  refreshCustomSplits();
+}
+
+function setSplitMode(mode) {
+  state.splitMode = mode;
+  document.querySelectorAll(".split-mode").forEach((b) =>
+    b.classList.toggle("active", b.dataset.split === mode));
+  $("custom-splits").classList.toggle("hidden", mode !== "custom");
+  refreshCustomSplits();
+}
+
+const checkedParticipants = () =>
+  [...$("exp-participants").querySelectorAll("input:checked")].map((c) => c.value);
+
+function refreshCustomSplits() {
+  if (state.splitMode !== "custom") { $("split-check").textContent = ""; return; }
+  const people = checkedParticipants();
+  const old = {};
+  $("custom-splits").querySelectorAll("input").forEach((i) => (old[i.dataset.name] = i.value));
+  $("custom-splits").innerHTML = people.map((p) => `
+    <div class="custom-split-row">
+      <span>${escapeHTML(p)}</span>
+      <input type="text" inputmode="numeric" placeholder="0" data-name="${escapeHTML(p)}" value="${escapeHTML(old[p] || "")}">
+    </div>`).join("");
+  $("custom-splits").querySelectorAll("input").forEach((i) => i.addEventListener("input", updateSplitCheck));
+  updateSplitCheck();
+}
+
+function updateSplitCheck() {
+  const el = $("split-check");
+  if (state.splitMode !== "custom") { el.textContent = ""; el.className = "split-check"; return; }
+  const total = parseAmount($("exp-amount").value);
+  if (!total) { el.textContent = "Nhập tổng số tiền trước nhé"; el.className = "split-check"; return; }
+  let sum = 0;
+  $("custom-splits").querySelectorAll("input").forEach((i) => { const v = parseAmount(i.value); if (v) sum += v; });
+  const diff = total - sum;
+  if (Math.abs(diff) < 1) { el.textContent = "✓ Vừa khớp " + fmtVND(total); el.className = "split-check ok"; }
+  else if (diff > 0) { el.textContent = `Còn thiếu ${fmtVND(diff)} nữa`; el.className = "split-check bad"; }
+  else { el.textContent = `Đang dư ${fmtVND(-diff)} — nhập lại nhé`; el.className = "split-check bad"; }
+}
+
+/* ─────────────── GẮN SỰ KIỆN ─────────────── */
+function bindEvents() {
+  document.querySelectorAll(".modal-backdrop").forEach((m) =>
+    m.addEventListener("click", (e) => { if (e.target === m) m.classList.add("hidden"); }));
+
+  document.querySelectorAll(".nav-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll("#screen-home .tab-page").forEach((p) => p.classList.remove("active"));
+      $(btn.dataset.tab).classList.add("active");
+      const titles = { "tab-groups": "Nhóm của bạn", "tab-activity": "Hoạt động", "tab-account": "Tài khoản" };
+      $("home-title").textContent = titles[btn.dataset.tab];
+      $("btn-fab-home").style.display = btn.dataset.tab === "tab-groups" ? "" : "none";
+    });
+  });
+
+  $("form-onboard").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = $("onboard-name").value.trim();
+    if (!name) return;
+    state.name = name;
+    saveLocal();
+    boot();
+  });
+
+  $("btn-open-join").addEventListener("click", () => { switchJoinTab("join"); $("modal-join").classList.remove("hidden"); });
+  $("btn-open-create").addEventListener("click", () => { switchJoinTab("create"); $("modal-join").classList.remove("hidden"); });
+  document.querySelectorAll("[data-join-tab]").forEach((btn) =>
+    btn.addEventListener("click", () => switchJoinTab(btn.dataset.joinTab)));
+
+  $("form-join").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = $("join-code").value.trim().toUpperCase();
+    if (!code) return;
+    try {
+      const g = await api.getGroup(code);
+      if (!g) return showError($("join-error"), "Không tìm thấy sổ với mã này. Kiểm tra lại nhé!");
+      if (!(g.members || []).includes(state.name)) await api.addMember(code, state.name);
+      if (!state.joined.includes(code)) { state.joined.push(code); saveLocal(); }
+      subscribeGroup(code);
+      closeAllModals();
+      $("join-code").value = "";
+      openGroup(code);
+    } catch (err) {
+      console.error(err);
+      showError($("join-error"), "Lỗi kết nối. Kiểm tra mạng hoặc cấu hình Firebase.");
+    }
+  });
+
+  $("form-create").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const groupName = $("create-group").value.trim();
+    if (!groupName) return;
+    try {
+      let code;
+      for (let i = 0; i < 5; i++) {
+        code = randomCode();
+        if (!(await api.getGroup(code))) break;
+      }
+      await api.createGroup(code, groupName, state.name);
+      state.joined.push(code);
+      saveLocal();
+      subscribeGroup(code);
+      closeAllModals();
+      $("create-group").value = "";
+      openGroup(code);
+      toast(`Đã lập sổ! Mã: ${code} — gửi cho bạn bè nhé`, 4000);
+    } catch (err) {
+      console.error(err);
+      showError($("join-error"), "Không tạo được sổ. Kiểm tra cấu hình Firebase.");
+    }
+  });
+
+  $("btn-back").addEventListener("click", () => {
+    state.currentGroup = null;
+    showScreen("screen-home");
+    renderAll();
+  });
+
+  $("btn-copy-code").addEventListener("click", async () => {
+    const code = state.currentGroup;
+    const note = MODE === "local"
+      ? "\n(Lưu ý: sổ đang ở chế độ thử trên máy, bạn bè chưa vào chung được — cần nối Firebase)"
+      : "";
+    const msg = `Vào "Sổ Nợ Nhóm" ghi chi tiêu chung với mình nha!\nMã nhóm: ${code}\nLink: ${location.href.split("#")[0]}${note}`;
+    try { await navigator.clipboard.writeText(msg); toast("Đã sao chép mã + link mời bạn bè ✓"); }
+    catch { toast("Mã nhóm của bạn: " + code + " — chép tay gửi bạn bè nhé", 5000); }
+  });
+
+  $("btn-pill-settle").addEventListener("click", () => { renderSettleModal(); $("modal-settle").classList.remove("hidden"); });
+  $("btn-pill-balances").addEventListener("click", () => { renderBalancesModal(); $("modal-balances").classList.remove("hidden"); });
+  $("btn-pill-totals").addEventListener("click", () => { renderTotalsModal(); $("modal-totals").classList.remove("hidden"); });
+
+  $("exp-group").addEventListener("change", rebuildExpensePeople);
+  $("btn-fab-home").addEventListener("click", () => openExpenseModal(null));
+  $("btn-fab-group").addEventListener("click", () => openExpenseModal(state.currentGroup));
+  $("btn-cancel-expense").addEventListener("click", closeAllModals);
+
+  $("btn-check-all").addEventListener("click", () => {
+    const boxes = [...$("exp-participants").querySelectorAll("input")];
+    const allChecked = boxes.every((b) => b.checked);
+    boxes.forEach((b) => (b.checked = !allChecked));
+    refreshCustomSplits();
+  });
+
+  $("exp-participants").addEventListener("change", refreshCustomSplits);
+
+  $("exp-amount").addEventListener("input", () => {
+    const val = parseAmount($("exp-amount").value);
+    $("exp-amount-preview").textContent = val ? "= " + fmtVND(val) : "";
+    updateSplitCheck();
+  });
+
+  document.querySelectorAll(".split-mode").forEach((btn) =>
+    btn.addEventListener("click", () => setSplitMode(btn.dataset.split)));
+
+  $("form-expense").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = $("exp-group").value;
+    const desc = $("exp-desc").value.trim();
+    const amount = parseAmount($("exp-amount").value);
+    const payer = $("exp-payer").value;
+    const participants = checkedParticipants();
+
+    if (!amount) return showError($("expense-error"), "Số tiền chưa hợp lệ. Ví dụ: 250k hoặc 1.5tr");
+    if (participants.length === 0) return showError($("expense-error"), "Chọn ít nhất 1 người cùng chia nhé!");
+
+    const entry = { type: "expense", desc, amount, payer, participants, addedBy: state.name };
+
+    if (state.splitMode === "custom") {
+      const splits = {};
+      let sum = 0;
+      for (const input of $("custom-splits").querySelectorAll("input")) {
+        const v = parseAmount(input.value) || 0;
+        splits[input.dataset.name] = v;
+        sum += v;
+      }
+      if (Math.abs(sum - amount) >= 1)
+        return showError($("expense-error"), "Tổng các phần chưa khớp số tiền. Xem dòng kiểm tra bên trên nhé.");
+      entry.splits = splits;
+    }
+
+    const btn = e.target.querySelector('[type="submit"]');
+    btn.disabled = true;
+    try {
+      await api.addEntry(code, entry);
+      closeAllModals();
+      toast("Đã ghi vào sổ ✓");
+      if (state.currentGroup === null) openGroup(code);
+    } catch (err) {
+      console.error(err);
+      showError($("expense-error"), "Ghi không thành công. Thử lại nhé.");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  $("form-add-member").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = state.currentGroup;
+    const name = $("new-member-name").value.trim();
+    if (!name || !code) return;
+    if ((state.data[code]?.members || []).includes(name)) { toast("Tên này đã có trong sổ rồi"); return; }
+    try {
+      await api.addMember(code, name);
+      $("new-member-name").value = "";
+      toast(`Đã thêm ${name} vào sổ ✓`);
+      setTimeout(renderBalancesModal, 200);
+    } catch (err) { console.error(err); toast("Thêm không thành công"); }
+  });
+
+  $("btn-reset").addEventListener("click", async () => {
+    if (!(await askConfirm("Rời app và xóa tên khỏi máy này? (dữ liệu các nhóm vẫn còn)"))) return;
+    Object.values(state.subs).forEach((u) => u());
+    store.removeItem(STORAGE_KEY);
+    store.removeItem("sono_session");
+    Object.assign(state, { name: null, joined: [], data: {}, subs: {}, currentGroup: null });
+    showScreen("screen-onboard");
+  });
+}
+
+function switchJoinTab(tab) {
+  document.querySelectorAll("[data-join-tab]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.joinTab === tab));
+  $("form-join").classList.toggle("hidden", tab !== "join");
+  $("form-create").classList.toggle("hidden", tab !== "create");
+}
+
+/* ─────────────── MAIN ─────────────── */
+(async function main() {
+  try {
+    const saved = JSON.parse(store.getItem(STORAGE_KEY));
+    if (saved?.name) { state.name = saved.name; state.joined = saved.groups || []; }
+    const old = JSON.parse(store.getItem("sono_session"));
+    if (old?.name && !state.name) { state.name = old.name; state.joined = old.code ? [old.code] : []; saveLocal(); }
+  } catch { /* bỏ qua */ }
+
+  await initBackend();
+
+  // Banner chế độ
+  const banner = $("mode-banner");
+  if (MODE === "local") {
+    banner.innerHTML = "📱 <b>Đang chạy thử trên máy này</b> — mọi tính năng dùng được, nhưng chưa đồng bộ với bạn bè. Dán <code>firebaseConfig</code> vào đầu file để bật đồng bộ nhóm real-time.";
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
+
+  bindEvents();
+  boot();
+})();
+
+</script>
+</body>
+</html>
