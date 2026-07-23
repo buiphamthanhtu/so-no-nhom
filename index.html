@@ -664,6 +664,15 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 }
 .modal-close:active { background: var(--highlight); }
 
+/* ═══════ NÚT XÓA NỢ (dành cho chủ nợ) ═══════ */
+.btn-clear {
+  font-family: "Itim", cursive; font-size: 15px;
+  color: var(--pen-red); background: transparent;
+  border: 1.5px solid var(--pen-red); border-radius: 8px;
+  padding: 8px 13px; cursor: pointer; white-space: nowrap;
+}
+.btn-clear:active { background: rgba(251, 56, 59, .12); }
+
 </style>
 </head>
 <body>
@@ -806,7 +815,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
     <!-- Trang 2: Cấn nợ -->
     <div id="gpage-settle" class="gtab-page">
       <h3 class="ruled-heading">⚖️ Cấn nợ tối ưu</h3>
-      <p class="hint" style="margin-bottom:12px">Ít lần chuyển khoản nhất có thể. Chuyển xong bấm <b>✓ Đã chuyển</b> để sổ tự trừ.</p>
+      <p class="hint" style="margin-bottom:12px">Đã gộp nợ để chuyển khoản ít lần nhất. <b>💸 Thanh toán</b> khoản mình nợ, <b>🧽 Xóa nợ</b> khi đã nhận đủ tiền.</p>
       <div id="settle-list" class="settle-list"></div>
     </div>
 
@@ -1535,7 +1544,7 @@ function renderFeedPage(code, g) {
     const mLabel = monthLabel(d);
     if (mLabel !== lastMonth) { html += `<p class="month-heading">${mLabel}</p>`; lastMonth = mLabel; }
 
-    const dateBlock = `<span class="feed-date"><span class="d">${d.getDate()}</span><br><span class="m">${monthShort(d)}</span></span>`;
+    const dateBlock = `<span class="feed-date"><span class="d">${d.getDate()}</span><br><span class="m">${monthShort(d)}</span><br><span class="m">${timeHM(d)}</span></span>`;
     const delBtn = (label) => en.addedBy === me
       ? `<button class="feed-del" data-del="${en.id}" data-label="${label}">✕</button>` : "";
 
@@ -1545,7 +1554,7 @@ function renderFeedPage(code, g) {
           ${dateBlock}
           <span class="feed-main">
             <span class="feed-title">💸 Chuyển tiền cấn nợ</span>
-            <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã chuyển cho ${escapeHTML(nameOf(g, en.to))} · ${timeHM(d)}</span>
+            <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã chuyển cho ${escapeHTML(nameOf(g, en.to))}</span>
           </span>
           <span class="feed-right lent"><span class="lbl">&nbsp;</span><span class="amt">${fmtVND(en.amount)}</span></span>
           ${delBtn("chuyển tiền " + escapeHTML(nameOf(g, en.payer)) + " → " + escapeHTML(nameOf(g, en.to)))}
@@ -1575,7 +1584,7 @@ function renderFeedPage(code, g) {
         ${dateBlock}
         <span class="feed-main">
           <span class="feed-title">${escapeHTML(en.desc)}</span>
-          <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã trả ${fmtVND(en.amount)} · ${splitDesc} · ${timeHM(d)}</span>
+          <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã trả ${fmtVND(en.amount)} · ${splitDesc}</span>
         </span>
         ${right}
         ${delBtn(escapeHTML(en.desc))}
@@ -1603,19 +1612,33 @@ function renderSettlePage(code, g) {
   });
   $("settle-list").innerHTML = settlements.length === 0
     ? `<div class="settle-done">🎉 Cả nhóm đã cân bằng — không ai nợ ai!</div>`
-    : settlements.map((s, i) => `
+    : settlements.map((s, i) => {
+        // Vai trò quyết định nút: con nợ → Thanh toán; chủ nợ → Xóa nợ; người ngoài → chỉ xem
+        let action = "";
+        if (s.from === state.uid) {
+          action = `<button class="btn-settle" data-i="${i}" data-act="pay">💸 Thanh toán</button>`;
+        } else if (s.to === state.uid) {
+          action = `<button class="btn-clear" data-i="${i}" data-act="clear">🧽 Xóa nợ</button>`;
+        }
+        return `
         <div class="settle-row">
           <span class="settle-text">
             <span class="who">${escapeHTML(nameOf(g, s.from))}</span> chuyển cho
             <span class="who">${escapeHTML(nameOf(g, s.to))}</span>
             → <span class="money">${fmtVND(s.amount)}</span>
           </span>
-          <button class="btn-settle" data-i="${i}">💸 Thanh toán</button>
-        </div>`).join("");
+          ${action}
+        </div>`;
+      }).join("");
   $("settle-list").querySelectorAll("[data-i]").forEach((btn) => {
     const s = settlements[Number(btn.dataset.i)];
-    btn.addEventListener("click", () =>
-      openPaymentModal(code, s, nameOf(g, s.from), nameOf(g, s.to)));
+    if (btn.dataset.act === "pay") {
+      btn.addEventListener("click", () =>
+        openPaymentModal(code, s, nameOf(g, s.from), nameOf(g, s.to)));
+    } else {
+      btn.addEventListener("click", () =>
+        clearDebt(code, s, nameOf(g, s.from)));
+    }
   });
 }
 
@@ -1681,6 +1704,13 @@ async function deleteEntry(code, id, label) {
   if (!(await askConfirm(`Xóa "${label}" khỏi sổ?`))) return;
   try { await api.deleteEntry(code, id); toast("Đã gạch khỏi sổ"); }
   catch (err) { console.error(err); toast("Xóa không thành công"); }
+}
+
+/* Chủ nợ xí xóa / xác nhận đã nhận đủ: ghi nhận như một lần thanh toán */
+async function clearDebt(code, s, fromName) {
+  const amount = Math.round(s.amount);
+  if (!(await askConfirm(`Xóa khoản nợ ${fmtVND(amount)} của ${fromName}? Sổ sẽ ghi nhận là đã thanh toán xong.`))) return;
+  await recordSettlement(code, s.from, s.to, amount);
 }
 
 async function recordSettlement(code, from, to, amount) {
