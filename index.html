@@ -1483,7 +1483,7 @@ function renderHome() {
     ob.textContent = `Tính chung, bạn còn nợ ${fmtVND(-overall)}`;
     ob.className = "overall-balance negative";
   } else {
-    ob.textContent = "Tính chung, bạn đang cân bằng ✓";
+    ob.textContent = "Tính chung, bạn sạch nợ ✓";
     ob.className = "overall-balance zero";
   }
 
@@ -1492,7 +1492,7 @@ function renderHome() {
   cards.innerHTML = state.joined.map((c) => {
     const g = state.data[c] || { name: c, members: [] };
     const mine = myBalanceIn(c);
-    let cls = "zero", txt = "đã cân bằng ✓";
+    let cls = "zero", txt = "sạch nợ ✓";
     if (mine > 0.5) { cls = "positive"; txt = `bạn được nhận ${fmtVND(mine)}`; }
     else if (mine < -0.5) { cls = "negative"; txt = `bạn còn nợ ${fmtVND(-mine)}`; }
     return `
@@ -1529,7 +1529,7 @@ function renderGroup() {
   const st = $("my-group-status");
   if (mine > 0.5) { st.textContent = `Trong sổ này, bạn được nhận lại ${fmtVND(mine)}`; st.className = "my-group-status positive"; }
   else if (mine < -0.5) { st.textContent = `Trong sổ này, bạn còn nợ ${fmtVND(-mine)}`; st.className = "my-group-status negative"; }
-  else { st.textContent = "Trong sổ này, bạn đang cân bằng ✓"; st.className = "my-group-status zero"; }
+  else { st.textContent = "Trong sổ này, bạn sạch nợ ✓"; st.className = "my-group-status zero"; }
 
   renderFeedPage(code, g);
   renderSettlePage(code, g);
@@ -1618,7 +1618,7 @@ function renderSettlePage(code, g) {
     return nameOf(g, a.to).localeCompare(nameOf(g, b.to), "vi");
   });
   $("settle-list").innerHTML = settlements.length === 0
-    ? `<div class="settle-done">🎉 Cả nhóm đã cân bằng — không ai nợ ai!</div>`
+    ? `<div class="settle-done">🎉 Cả xóm sạch nợ — không ai nợ ai!</div>`
     : settlements.map((s, i) => {
         // Vai trò quyết định nút: con nợ → Thanh toán; chủ nợ → Xóa nợ; người ngoài → chỉ xem
         let action = "";
@@ -1655,7 +1655,7 @@ function renderBalancesPage(code, g) {
     .sort((a, b) => b[1] - a[1])
     .map(([id, v]) => {
       const cls = v > 0.5 ? "positive" : v < -0.5 ? "negative" : "";
-      const label = v > 0.5 ? `được nhận ${fmtVND(v)}` : v < -0.5 ? `còn thiếu ${fmtVND(-v)}` : "đã cân bằng ✓";
+      const label = v > 0.5 ? `được nhận ${fmtVND(v)}` : v < -0.5 ? `còn thiếu ${fmtVND(-v)}` : "sạch nợ ✓";
       return `<div class="balance-row ${cls}">
         <span>${escapeHTML(nameOf(g, id))}${id === state.uid ? " (bạn)" : ""}</span>
         <span class="balance-val">${label}</span></div>`;
@@ -1710,7 +1710,7 @@ function renderTotalsPage(code, g) {
     const bal = balances[m] || 0;
     if (bal > 0.5) lines.push(`<span class="tot-status pos">→ còn được nhận ${fmtVND(bal)}</span>`);
     else if (bal < -0.5) lines.push(`<span class="tot-status neg">→ còn thiếu ${fmtVND(-bal)}</span>`);
-    else lines.push(`<span class="tot-status ok">✓ đã cân bằng</span>`);
+    else lines.push(`<span class="tot-status ok">✓ Sạch nợ</span>`);
     return `
     <div class="balance-row">
       <span>${escapeHTML(nameOf(g, m))}${m === state.uid ? " (bạn)" : ""}${badgesOf(m)}</span>
