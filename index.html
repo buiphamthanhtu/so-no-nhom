@@ -1656,20 +1656,36 @@ function renderBalancesPage(code, g) {
 }
 
 function renderTotalsPage(code, g) {
-  const expenses = (g.entries || []).filter((e) => e.type !== "settlement");
+  const entries = g.entries || [];
+  const expenses = entries.filter((e) => e.type !== "settlement");
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   $("totals-amount").textContent = fmtVND(total);
 
-  const paid = {}, share = {};
-  g.members.forEach((m) => { paid[m] = 0; share[m] = 0; });
-  for (const en of expenses) {
-    paid[en.payer] = (paid[en.payer] || 0) + en.amount;
-    for (const p of en.participants) share[p] = (share[p] || 0) + shareOf(en, p);
+  // Gom đủ mọi người từng xuất hiện trong dữ liệu (không bỏ sót ai)
+  const ids = new Set(g.members);
+  for (const en of entries) {
+    if (en.payer) ids.add(en.payer);
+    if (en.to) ids.add(en.to);
+    (en.participants || []).forEach((p) => ids.add(p));
   }
-  // Badge: 👑 Phú hộ = chi trước nhiều nhất · 🥲 Nghèo nhất xóm = đang nợ nhiều nhất
+  const ordered = [...g.members, ...[...ids].filter((i) => !g.members.includes(i))];
+
+  const paid = {}, share = {}, sentS = {}, recvS = {};
+  ordered.forEach((m) => { paid[m] = 0; share[m] = 0; sentS[m] = 0; recvS[m] = 0; });
+  for (const en of entries) {
+    if (en.type === "settlement") {
+      sentS[en.payer] += en.amount;   // đã chuyển tiền cấn nợ
+      recvS[en.to] += en.amount;      // đã nhận tiền cấn nợ
+    } else {
+      paid[en.payer] += en.amount;
+      for (const p of en.participants || []) share[p] += shareOf(en, p);
+    }
+  }
+
+  // Badge: 👑 Phú hộ = chi trước nhiều nhất · 🥲 Nghèo nhất xóm = đang nợ nhiều nhất (đã trừ cấn nợ)
   const balances = computeBalances(g);
   let richId = null, richVal = 0, poorId = null, poorVal = 0;
-  for (const m of g.members) {
+  for (const m of ordered) {
     if ((paid[m] || 0) > richVal) { richVal = paid[m]; richId = m; }
     if ((balances[m] || 0) < poorVal) { poorVal = balances[m]; poorId = m; }
   }
@@ -1677,11 +1693,18 @@ function renderTotalsPage(code, g) {
     (m === richId && richVal > 0 ? '<span class="badge badge--rich">👑 Phú hộ</span>' : "") +
     (m === poorId && poorVal < -0.5 ? '<span class="badge badge--poor">🥲 Nghèo nhất xóm</span>' : "");
 
-  $("totals-list").innerHTML = g.members.map((m) => `
+  $("totals-list").innerHTML = ordered.map((m) => {
+    const parts = [];
+    if (sentS[m] > 0) parts.push(`đã chuyển ${fmtVND(sentS[m])}`);
+    if (recvS[m] > 0) parts.push(`đã nhận ${fmtVND(recvS[m])}`);
+    const settleLine = parts.length
+      ? `<br><span style="color:var(--pen-green)">💸 cấn nợ: ${parts.join(" · ")}</span>` : "";
+    return `
     <div class="balance-row">
       <span>${escapeHTML(nameOf(g, m))}${m === state.uid ? " (bạn)" : ""}${badgesOf(m)}</span>
-      <span style="font-size:13px;text-align:right">đã trả <b>${fmtVND(paid[m] || 0)}</b><br>phần phải chịu ${fmtVND(share[m] || 0)}</span>
-    </div>`).join("");
+      <span style="font-size:13px;text-align:right">đã trả trước <b>${fmtVND(paid[m] || 0)}</b><br>phần phải chịu ${fmtVND(share[m] || 0)}${settleLine}</span>
+    </div>`;
+  }).join("");
 }
 
 function renderAccount() {
