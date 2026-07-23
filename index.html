@@ -8,7 +8,7 @@
   <meta name="description" content="Sổ nợ nhóm: đăng nhập SĐT, ghi chi tiêu chung, tự tính ai chuyển cho ai. Đồng bộ real-time, miễn phí.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Itim&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playwrite+IE:wght@400&display=swap" rel="stylesheet">
   <style>
 /* ═══════════════════════════════════════════════
    SỔ NỢ NHÓM — flow Splitwise, da "sổ nợ giấy kẻ ô"
@@ -16,13 +16,15 @@
    ═══════════════════════════════════════════════ */
 
 :root {
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Playwrite IE", cursive;
   --paper: #FFFFFF;                    /* nền trắng thuần */
   --grid-line: rgba(12, 0, 143, .07);  /* ô caro tint primary */
   --margin-red: #FB383B;
   --ink: #0C008F;                      /* primary */
   --ink-soft: rgba(12, 0, 143, .55);
   --pen-red: #FB383B;
-  --pen-green: #2e7d5b;
+  --pen-green: #00B368;   /* xanh tiền về - tươi */
   --highlight: rgba(254, 191, 4, .5);  /* FEBF04 opacity 50% */
   --card: #FFFFFF;
   --shadow: 0 2px 10px rgba(12, 0, 143, .10);
@@ -34,7 +36,7 @@
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  font-family: var(--font-ui);
   color: var(--ink);
   min-height: 100dvh;
   background-color: var(--paper);
@@ -62,21 +64,15 @@ body::before {
 .notebook-cover { max-width: 440px; margin: 0 auto; padding: 48px 20px 32px; }
 .cover-label { text-align: center; margin-bottom: 26px; }
 
-.cover-kicker {
-  display: inline-block; font-size: 13px; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--ink-soft);
-  border: 1.5px dashed var(--ink-soft); border-radius: 999px;
-  padding: 4px 14px; background: var(--card);
-}
 
 .cover-title {
-  font-family: "Itim", cursive; font-size: 46px; line-height: 1.1;
+  font-family: var(--font-ui); font-size: 46px; line-height: 1.1;
   margin: 14px 0 6px;
   background: linear-gradient(transparent 62%, var(--highlight) 62%, var(--highlight) 92%, transparent 92%);
   display: inline-block; padding: 0 8px; transform: rotate(-1deg);
 }
 
-.cover-sub { font-family: "Itim", cursive; font-size: 17px; color: var(--ink-soft); }
+.cover-sub { font-family: var(--font-ui); font-size: 17px; color: var(--ink-soft); }
 
 .login-card {
   background: var(--card);
@@ -113,11 +109,11 @@ select {
 
 .input-code { text-transform: uppercase; letter-spacing: .18em; font-weight: 700; }
 
-.amount-preview { font-family: "Itim", cursive; font-size: 15px; color: var(--pen-green); min-height: 18px; }
+.amount-preview { font-family: var(--font-ui); font-size: 15px; color: var(--ink-soft); min-height: 18px; }
 
 /* ═══════ NÚT ═══════ */
 .btn-primary {
-  font-family: "Itim", cursive; font-size: 19px;
+  font-family: var(--font-ui); font-size: 19px;
   color: var(--paper); background: var(--ink);
   border: none; border-radius: 10px; padding: 13px; cursor: pointer;
   box-shadow: 3px 3px 0 rgba(12, 0, 143, .3);
@@ -132,7 +128,7 @@ select {
 }
 
 .btn-small {
-  font-family: "Itim", cursive; font-size: 16px;
+  font-family: var(--font-ui); font-size: 16px;
   background: var(--highlight); border: 1.5px solid var(--ink);
   border-radius: 10px; padding: 11px 16px; cursor: pointer; color: var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
@@ -146,7 +142,7 @@ select {
 
 .error-msg {
   color: var(--pen-red); font-size: 14px;
-  font-family: "Itim", cursive; text-align: center; margin-top: 10px;
+  font-family: var(--font-ui); text-align: center; margin-top: 10px;
 }
 
 /* ═══════ HEADER ═══════ */
@@ -160,13 +156,13 @@ select {
 }
 
 .btn-back {
-  font-family: "Itim", cursive; font-size: 30px; line-height: 1;
+  font-family: var(--font-ui); font-size: 30px; line-height: 1;
   color: var(--ink); background: none; border: none;
   cursor: pointer; padding: 0 8px 4px 0;
 }
 
 .group-name {
-  font-family: "Itim", cursive; font-size: 22px; line-height: 1.15;
+  font-family: var(--font-ui); font-size: 22px; line-height: 1.15;
   max-width: 62vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
@@ -190,7 +186,7 @@ select {
 
 /* ═══════ TRANG CHỦ: DANH SÁCH NHÓM (Splitwise Groups) ═══════ */
 .overall-balance {
-  font-family: "Itim", cursive; font-size: 20px;
+  font-family: var(--font-ui); font-size: 20px;
   margin-bottom: 16px; padding: 0 4px;
 }
 .overall-balance.positive { color: var(--pen-green); }
@@ -225,14 +221,14 @@ select {
 
 .group-card-info { flex: 1; min-width: 0; }
 .group-card-name {
-  font-family: "Itim", cursive; font-size: 19px;
+  font-family: var(--font-ui); font-size: 19px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .group-card-status { font-size: 13px; margin-top: 2px; }
 .group-card-status.positive { color: var(--pen-green); font-weight: 600; }
 .group-card-status.negative { color: var(--pen-red); font-weight: 600; }
 .group-card-status.zero { color: var(--ink-soft); }
-.group-card-arrow { font-family: "Itim", cursive; font-size: 24px; color: var(--ink-soft); }
+.group-card-arrow { font-family: var(--font-ui); font-size: 24px; color: var(--ink-soft); }
 
 .home-actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
 .home-actions .btn-small { flex: 1; min-width: 150px; }
@@ -246,7 +242,7 @@ select {
 }
 
 .pill-btn {
-  font-family: "Itim", cursive; font-size: 15.5px;
+  font-family: var(--font-ui); font-size: 15.5px;
   color: var(--ink); background: var(--card);
   border: 1.5px solid var(--ink); border-radius: 999px;
   padding: 9px 16px; cursor: pointer; white-space: nowrap;
@@ -256,7 +252,7 @@ select {
 
 /* ═══════ TRẠNG THÁI CÁ NHÂN TRONG NHÓM ═══════ */
 .my-group-status {
-  font-family: "Itim", cursive; font-size: 17px;
+  font-family: var(--font-ui); font-size: 17px;
   margin-bottom: 14px; padding: 0 4px;
 }
 .my-group-status.positive { color: var(--pen-green); }
@@ -267,7 +263,7 @@ select {
 .feed { display: flex; flex-direction: column; gap: 10px; }
 
 .month-heading {
-  font-family: "Itim", cursive; font-size: 16px; color: var(--ink-soft);
+  font-family: var(--font-ui); font-size: 16px; color: var(--ink-soft);
   margin: 10px 0 0; padding-left: 4px;
   display: inline-block;
   background: linear-gradient(transparent 60%, var(--highlight) 60%, var(--highlight) 95%, transparent 95%);
@@ -287,12 +283,12 @@ select {
   flex-shrink: 0; width: 40px; text-align: center;
   border-right: 1.5px dashed var(--grid-line); padding-right: 9px;
 }
-.feed-date .d { font-family: "Itim", cursive; font-size: 19px; line-height: 1.1; }
+.feed-date .d { font-family: var(--font-ui); font-size: 19px; line-height: 1.1; }
 .feed-date .m { font-size: 10.5px; color: var(--ink-soft); text-transform: lowercase; }
 
 .feed-main { flex: 1; min-width: 0; }
 .feed-title {
-  font-family: "Itim", cursive; font-size: 16.5px;
+  font-family: var(--font-ui); font-size: 16.5px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .feed-sub { font-size: 12.5px; color: var(--ink-soft); margin-top: 1px; }
@@ -306,7 +302,7 @@ select {
 .feed-right.none { color: var(--ink-soft); }
 .feed-right.none .amt { font-weight: 400; font-size: 12px; }
 
-.feed-row.settlement { border-style: dashed; background: rgba(46, 125, 91, .05); }
+.feed-row.settlement { border-style: dashed; background: rgba(12, 0, 143, .04); }
 
 .feed-del {
   position: absolute; top: 4px; right: 6px;
@@ -329,7 +325,7 @@ select {
 .activity-time { display: block; font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
 
 /* ═══════ TỔNG KẾT / SỐ DƯ ═══════ */
-.total-amount { font-family: "Itim", cursive; font-size: 36px; color: var(--ink); }
+.total-amount { font-family: var(--font-ui); font-size: 36px; color: var(--ink); }
 
 .balance-list, .settle-list, .member-list { display: flex; flex-direction: column; gap: 8px; }
 
@@ -358,13 +354,13 @@ select {
 .settle-row .settle-text { flex: 1; min-width: 180px; }
 .settle-row .who { font-weight: 700; }
 .settle-row .money {
-  font-family: "Itim", cursive; font-size: 18px; color: var(--pen-red);
+  font-family: var(--font-ui); font-size: 18px; color: var(--pen-red);
   background: linear-gradient(transparent 55%, var(--highlight) 55%, var(--highlight) 95%, transparent 95%);
   padding: 0 4px;
 }
 
 .btn-settle {
-  font-family: "Itim", cursive; font-size: 15px;
+  font-family: var(--font-ui); font-size: 15px;
   color: var(--paper); background: var(--ink);
   border: 1.5px solid var(--ink); border-radius: 8px;
   padding: 8px 13px; cursor: pointer;
@@ -373,9 +369,9 @@ select {
 .btn-settle:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink); }
 
 .settle-done {
-  text-align: center; font-family: "Itim", cursive; font-size: 17px;
-  color: var(--pen-green); padding: 16px;
-  border: 1.5px dashed var(--pen-green); border-radius: 10px;
+  text-align: center; font-family: var(--font-ui); font-size: 17px;
+  color: var(--ink); padding: 16px;
+  border: 1.5px dashed var(--ink); border-radius: 10px;
   background: var(--card);
 }
 
@@ -383,7 +379,7 @@ select {
 .summary-block { margin-bottom: 26px; }
 
 .ruled-heading {
-  font-family: "Itim", cursive; font-size: 19px; margin-bottom: 12px;
+  font-family: var(--font-ui); font-size: 19px; margin-bottom: 12px;
   display: inline-block;
   background: linear-gradient(transparent 60%, var(--highlight) 60%, var(--highlight) 95%, transparent 95%);
   padding: 0 6px;
@@ -401,7 +397,7 @@ select {
   width: 34px; height: 34px; border-radius: 50%;
   background: var(--highlight); border: 1.5px solid var(--ink);
   display: flex; align-items: center; justify-content: center;
-  font-family: "Itim", cursive; font-size: 16px; flex-shrink: 0;
+  font-family: var(--font-ui); font-size: 16px; flex-shrink: 0;
 }
 
 .member-you {
@@ -422,14 +418,14 @@ select {
 
 .empty-state {
   text-align: center; margin-top: 60px; color: var(--ink-soft);
-  font-family: "Itim", cursive; font-size: 17px; line-height: 1.6;
+  font-family: var(--font-ui); font-size: 17px; line-height: 1.6;
 }
 .empty-doodle { font-size: 44px; margin-bottom: 8px; }
 
 /* ═══════ FAB + NAV ═══════ */
 .fab {
   position: fixed; right: 16px; bottom: calc(var(--nav-h) + 16px); z-index: 25;
-  font-family: "Itim", cursive; font-size: 18px;
+  font-family: var(--font-ui); font-size: 18px;
   color: var(--paper); background: var(--pen-red);
   border: 2px solid var(--ink); border-radius: 999px;
   padding: 13px 20px; cursor: pointer;
@@ -460,7 +456,7 @@ select {
 .tab-row { display: flex; gap: 8px; margin-bottom: 18px; }
 
 .tab-btn {
-  flex: 1; font-family: "Itim", cursive; font-size: 16px;
+  flex: 1; font-family: var(--font-ui); font-size: 16px;
   padding: 10px; background: transparent; color: var(--ink-soft);
   border: 1.5px dashed var(--ink-soft); border-radius: 10px; cursor: pointer;
 }
@@ -486,7 +482,7 @@ select {
 }
 @keyframes sheet-up { from { transform: translateY(40%); } to { transform: none; } }
 
-.modal-title { font-family: "Itim", cursive; font-size: 22px; margin-bottom: 14px; }
+.modal-title { font-family: var(--font-ui); font-size: 22px; margin-bottom: 14px; }
 
 #form-expense { display: flex; flex-direction: column; gap: 16px; }
 
@@ -502,9 +498,9 @@ select {
   padding: 9px 10px; font-size: 14.5px; cursor: pointer;
   background: transparent; user-select: none;
 }
-.check-chip input { accent-color: var(--pen-green); width: 17px; height: 17px; margin: 0; }
+.check-chip input { accent-color: var(--ink); width: 17px; height: 17px; margin: 0; }
 .check-chip:has(input:checked) {
-  border: 1.5px solid var(--pen-green);
+  border: 1.5px solid var(--ink);
   background: rgba(46, 125, 91, .08);
 }
 
@@ -516,8 +512,8 @@ select {
 .custom-split-row span { flex: 1; font-size: 14.5px; }
 .custom-split-row input { width: 110px; text-align: right; font-weight: 600; }
 
-.split-check { font-family: "Itim", cursive; font-size: 14px; margin-top: 8px; min-height: 18px; }
-.split-check.ok { color: var(--pen-green); }
+.split-check { font-family: var(--font-ui); font-size: 14px; margin-top: 8px; min-height: 18px; }
+.split-check.ok { color: var(--ink); }
 .split-check.bad { color: var(--pen-red); }
 
 .modal-actions { display: flex; gap: 10px; margin-top: 4px; }
@@ -528,7 +524,7 @@ select {
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--nav-h) + 80px);
   transform: translateX(-50%); z-index: 60;
-  font-family: "Itim", cursive; font-size: 15px;
+  font-family: var(--font-ui); font-size: 15px;
   color: var(--paper); background: var(--ink);
   border-radius: 999px; padding: 10px 20px;
   box-shadow: var(--shadow); max-width: 88vw; text-align: center;
@@ -536,7 +532,7 @@ select {
 }
 
 @media (min-width: 600px) {
-  .cover-title { font-size: 54px; }
+  .cover-title { font-size: 42px; line-height: 1.35; }
   .fab { right: calc(50vw - 280px + 16px); }
 }
 
@@ -547,7 +543,7 @@ select {
 /* ═══════ MODAL XÁC NHẬN ═══════ */
 .modal-sheet--small { max-width: 420px; border-radius: 18px; border-bottom: 1.5px solid var(--ink); margin-bottom: 20vh; }
 .modal-backdrop:has(.modal-sheet--small) { align-items: center; }
-.confirm-text { font-family: "Itim", cursive; font-size: 17.5px; line-height: 1.5; margin: 6px 4px 18px; text-align: center; }
+.confirm-text { font-family: var(--font-ui); font-size: 17.5px; line-height: 1.5; margin: 6px 4px 18px; text-align: center; }
 
 /* ═══════ CHIA THEO KHẨU PHẦN ═══════ */
 .tab-row--3 .tab-btn { font-size: 13.5px; padding: 9px 4px; }
@@ -555,7 +551,7 @@ select {
 .share-stepper { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .share-btn {
   width: 30px; height: 30px;
-  font-family: "Itim", cursive; font-size: 19px; line-height: 1;
+  font-family: var(--font-ui); font-size: 19px; line-height: 1;
   color: var(--ink); background: var(--highlight);
   border: 1.5px solid var(--ink); border-radius: 8px; cursor: pointer;
 }
@@ -563,7 +559,7 @@ select {
 .share-num {
   min-width: 46px; text-align: center;
   font-weight: 700; font-size: 15px;
-  font-family: "Itim", cursive;
+  font-family: var(--font-ui);
 }
 .share-amt {
   flex-shrink: 0; min-width: 84px; text-align: right;
@@ -589,7 +585,7 @@ select {
   border: 1.5px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
   font-weight: 700;
-  font-family: "Itim", cursive;
+  font-family: var(--font-ui);
 }
 .nav-btn--accent:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
 .page-area--group { padding-bottom: calc(var(--nav-h) + 40px); }
@@ -617,7 +613,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 
 /* ═══════ NÚT VIỀN TRONG SUỐT + BADGE TỔNG CHI ═══════ */
 .btn-outline {
-  font-family: "Itim", cursive; font-size: 16px;
+  font-family: var(--font-ui); font-size: 16px;
   background: transparent; color: var(--ink);
   border: 1.5px solid var(--ink); border-radius: 10px;
   padding: 11px 16px; cursor: pointer;
@@ -641,7 +637,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
   padding: 10px; background: var(--card);
 }
 .qr-box img { max-width: 220px; width: 100%; border-radius: 8px; border: 1.5px solid var(--ink); }
-.qr-box .qr-empty { font-family: "Itim", cursive; color: var(--ink-soft); font-size: 15px; }
+.qr-box .qr-empty { font-family: var(--font-ui); color: var(--ink-soft); font-size: 15px; }
 .btn-outline--danger { color: var(--pen-red); border-color: var(--pen-red); }
 .qr-img { display: block; width: 100%; max-width: 340px; margin: 0 auto 10px; border-radius: 10px; border: 1.5px solid var(--ink); }
 .btn-qr-view {
@@ -666,7 +662,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 
 /* ═══════ NÚT XÓA NỢ (dành cho chủ nợ) ═══════ */
 .btn-clear {
-  font-family: "Itim", cursive; font-size: 15px;
+  font-family: var(--font-ui); font-size: 15px;
   color: var(--pen-red); background: transparent;
   border: 1.5px solid var(--pen-red); border-radius: 8px;
   padding: 8px 13px; cursor: pointer; white-space: nowrap;
@@ -674,7 +670,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 .btn-clear:active { background: rgba(251, 56, 59, .12); }
 
 /* ═══════ TỔNG CHI: MÀU TỪNG DÒNG ═══════ */
-.tot-settle { color: var(--pen-green); }
+.tot-settle { color: var(--ink-soft); }
 .tot-status { font-weight: 700; }
 .tot-status.pos { color: var(--pen-green); }
 .tot-status.neg { color: var(--pen-red); }
@@ -716,6 +712,128 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 }
 .btn-copy-amount:active { transform: translate(1px, 1px); }
 
+/* ═══════════════════════════════════════════════
+   DESKTOP (≥1024px): app shell 2 cột
+   Header 64px cố định — sidebar neo từ đúng mép dưới header
+   ═══════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  /* Header chuẩn hóa cao 64px, tên + chip mã xếp ngang */
+  .app-header {
+    height: 64px;
+    padding: 0 32px 0 24px;
+    align-items: center;
+  }
+  .header-info { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .app-header .group-name { max-width: 40vw; }
+
+  /* Bottom bar → sidebar trái, nằm DƯỚI header (top 64, z thấp hơn header) */
+  .bottom-nav {
+    top: 64px; bottom: 0; left: 0; right: auto;
+    width: 240px; height: auto;
+    flex-direction: column; justify-content: flex-start;
+    gap: 4px; padding: 18px 12px 100px;
+    border-top: none;
+    border-right: 1.5px solid rgba(12, 0, 143, .15);
+    z-index: 15;
+  }
+  .nav-btn {
+    flex: 0 0 auto; flex-direction: row; justify-content: flex-start;
+    gap: 12px; width: 100%;
+    padding: 12px 16px; border-radius: 10px;
+    font-size: 15px;
+  }
+  .nav-btn .nav-icon { font-size: 20px; }
+  .nav-btn.active { background: var(--highlight); }
+
+  /* Nút Ghi chi cố định cuối sidebar */
+  .fab, #screen-group .fab {
+    left: 16px; right: auto; bottom: 20px;
+    width: 208px; text-align: center;
+    border-radius: 12px;
+  }
+
+  /* Nội dung: cột giữa */
+  .page-area, .page-area--group {
+    margin-left: 240px;
+    max-width: 860px;
+    padding: 36px 56px 120px 56px;
+  }
+  .mode-banner { margin-left: 272px; max-width: 700px; }
+
+  /* Danh sách sổ 2 cột */
+  .group-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .home-actions--top { max-width: 480px; }
+
+  /* Modal thành dialog nổi giữa màn hình */
+  .modal-backdrop { align-items: center; }
+  .modal-sheet {
+    max-width: 520px; max-height: 86vh;
+    border-radius: 18px;
+    border-bottom: 1.5px solid var(--ink);
+    box-shadow: 6px 6px 0 rgba(12, 0, 143, .25);
+  }
+  .checkbox-grid { grid-template-columns: repeat(3, 1fr); }
+
+  .toast { bottom: 40px; }
+}
+
+/* ═══════════════════════════════════════════════
+   TYPE SYSTEM
+   Display (Momo Signature): tên app, tiêu đề màn hình,
+     heading mục, empty state, câu ăn mừng.
+   UI (font hệ điều hành): nút, tab, form,
+     dữ liệu người dùng, TIỀN, ngày giờ.
+   ═══════════════════════════════════════════════ */
+.cover-title, .cover-sub, .app-header .group-name,
+.ruled-heading, .empty-state, .settle-done {
+  font-family: var(--font-display);
+}
+.cover-title { font-size: 42px; line-height: 1.35; }
+.app-header .group-name { font-size: 21px; }
+.ruled-heading { font-size: 19px; }
+
+/* Cân lại UI khi rời script */
+.btn-primary { font-weight: 700; font-size: 15.5px; }
+.fab { font-weight: 700; font-size: 15.5px; }
+.btn-small, .btn-outline { font-weight: 600; font-size: 14px; }
+.tab-btn { font-weight: 600; font-size: 13.5px; }
+.btn-settle, .btn-clear { font-weight: 600; font-size: 13.5px; }
+.feed-title { font-weight: 600; font-size: 15px; }
+.group-card-name { font-weight: 700; font-size: 16px; }
+.feed-date .d { font-weight: 700; font-size: 17px; }
+.total-amount { font-weight: 800; font-size: 32px; letter-spacing: -0.5px; }
+.overall-balance, .my-group-status { font-weight: 600; font-size: 15.5px; }
+.month-heading {
+  font-weight: 600; font-size: 13.5px; letter-spacing: .01em;
+  background: none; color: var(--ink-soft);
+}
+.modal-title { font-weight: 700; font-size: 18px; }
+.confirm-text { font-size: 15px; }
+.settle-row .money { font-weight: 700; font-size: 16px; }
+.toast { font-weight: 600; font-size: 13.5px; }
+.amount-preview, .split-check, .error-msg { font-weight: 600; font-size: 13px; }
+.member-avatar { font-weight: 700; }
+
+/* ═══════ CHỈNH THEO REVIEW PLAYWRITE ═══════ */
+/* Playwrite dấu cao/thấp hơn khung chữ thường → nới line-height, chống crop */
+.app-header .group-name { line-height: 1.55; padding: 2px 0 3px; overflow: visible; }
+.cover-title { overflow: visible; padding-bottom: 6px; }
+.ruled-heading { line-height: 1.6; }
+
+/* Tên nhóm và chip Mã: thêm khoảng thở (mobile xếp dọc) */
+.header-info .group-code { margin-top: 8px; }
+@media (min-width: 1024px) {
+  .header-info .group-code { margin-top: 0; } /* desktop xếp ngang đã có gap */
+}
+
+/* Description trạng thái trong sổ: font viết tay */
+.my-group-status {
+  font-family: var(--font-display);
+  font-size: 16.5px;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
 </style>
 </head>
 <body>
@@ -724,7 +842,6 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 <section id="screen-auth" class="screen">
   <div class="notebook-cover">
     <div class="cover-label">
-      <div class="cover-kicker">Cuốn sổ ghi chung</div>
       <h1 class="cover-title">Sổ Nợ Nhóm</h1>
       <p class="cover-sub">Đi chơi cứ vui — tiền nong đã có sổ lo.</p>
     </div>
