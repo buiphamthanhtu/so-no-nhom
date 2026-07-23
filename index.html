@@ -214,7 +214,7 @@ select {
   width: 46px; height: 46px; flex-shrink: 0;
   border-radius: 10px;
   background: var(--highlight);
-  border: 1.5px solid var(--ink);
+  border: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 22px;
 }
@@ -883,7 +883,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
     background: var(--paper);
     border: 1.5px solid var(--ink);
     border-radius: 999px;
-    box-shadow: none;
+    box-shadow: 3px 3px 0 var(--ink);
   }
   .nav-btn { border-radius: 999px; gap: 3px; }
   .nav-btn.active { background: var(--highlight); }
@@ -903,6 +903,36 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
   color: var(--ink);
 }
 .hd-icon svg { width: 21px; height: 21px; display: block; }
+
+/* ═══════ TẤT CẢ BUTTON DẠNG PILL ═══════ */
+.btn-primary, .btn-small, .btn-outline, .btn-ghost,
+.btn-settle, .btn-clear, .btn-copy-amount, .fab,
+.tab-btn, .share-btn, .member-leave, .feed-del, .btn-qr-view {
+  border-radius: 999px;
+}
+
+/* ═══════ CARD NHÓM 3 HÀNG ═══════ */
+.group-card-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.group-card-info > span { display: block; }
+.group-card-members { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+
+/* ═══════ TẤT CẢ BUTTON DẠNG PILL ═══════ */
+.btn-primary, .btn-small, .btn-outline, .btn-ghost,
+.btn-settle, .btn-clear, .btn-copy-amount, .fab,
+.tab-btn, .share-btn, .member-leave, .feed-del {
+  border-radius: 999px;
+}
+
+/* Tên nhóm trên card: primary (button mặc định ra đen) */
+.group-card-name { color: var(--ink); }
+
+/* ═══════ BADGE TỔNG CHI: nằm dưới tên ═══════ */
+.tot-badges { display: block; margin-top: 5px; }
+.tot-badges .badge { margin: 0 6px 3px 0; }
+.badge--free { background: rgba(0, 179, 104, .12); color: var(--pen-green); border: 1px solid var(--pen-green); }
+
+/* ═══════ BADGE KHÔNG VIỀN ═══════ */
+.badge, .badge--rich, .badge--poor, .badge--free { border: none; }
 
 </style>
 </head>
@@ -925,7 +955,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
       <form id="form-login" class="login-form">
         <label class="field">
           <span class="field-label">Số điện thoại</span>
-          <input type="tel" id="login-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="11" autocomplete="tel" required>
+          <input type="tel" id="login-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="16" autocomplete="tel" required>
         </label>
         <label class="field">
           <span class="field-label">Passcode (6 số)</span>
@@ -941,7 +971,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
         </label>
         <label class="field">
           <span class="field-label">Số điện thoại</span>
-          <input type="tel" id="reg-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="11" autocomplete="tel" required>
+          <input type="tel" id="reg-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="16" autocomplete="tel" required>
         </label>
         <label class="field">
           <span class="field-label">Tạo passcode (6 số, để đăng nhập máy khác)</span>
@@ -1220,6 +1250,14 @@ function askConfirm(msg) {
     yes.onclick = () => done(true);
     no.onclick = () => done(false);
   });
+}
+
+/* Chuẩn hóa SĐT từ autofill: "090 123 4567", "+84 90-123-45-67" → "0901234567" */
+function normalizePhone(raw) {
+  let s = String(raw).replace(/[^\d+]/g, "");   // bỏ khoảng trắng, gạch, chấm, ngoặc
+  if (s.startsWith("+84")) s = "0" + s.slice(3); // số quốc tế VN → nội địa
+  else if (s.startsWith("84") && s.length >= 10) s = "0" + s.slice(2);
+  return s.replace(/\+/g, "");
 }
 
 /* Băm passcode (SHA-256, muối = SĐT); có fallback nơi thiếu crypto.subtle */
@@ -1631,12 +1669,45 @@ function closeAllModals() {
   document.querySelectorAll(".modal-backdrop").forEach((m) => m.classList.add("hidden"));
 }
 
+/* ─── Hiệu ứng lucky draw: số nhảy loạn rồi khóa dần từ trái sang phải ─── */
+function rollNumbers(root) {
+  const els = [...root.querySelectorAll("*")].filter(
+    (el) => el.children.length === 0 && el.textContent.includes("₫") && /\d/.test(el.textContent)
+  );
+  const DURATION = 620;
+  for (const el of els) {
+    const finalText = el.textContent;
+    const chars = [...finalText];
+    const digitPos = chars.map((c, i) => (/\d/.test(c) ? i : -1)).filter((i) => i >= 0);
+    if (!digitPos.length) continue;
+    const start = performance.now();
+    el.dataset.rolling = "1";
+    const tick = (now) => {
+      if (!el.isConnected || el.dataset.rolling !== "1") return; // trang re-render thì dừng êm
+      const p = Math.min(1, (now - start) / DURATION);
+      const locked = Math.floor(p * digitPos.length); // khóa dần từ trái sang
+      const frame = [...chars];
+      digitPos.forEach((pos, idx) => {
+        if (idx >= locked && p < 1) frame[pos] = String(Math.floor(Math.random() * 10));
+      });
+      el.textContent = frame.join("");
+      if (p < 1) requestAnimationFrame(tick);
+      else { el.textContent = finalText; delete el.dataset.rolling; }
+    };
+    requestAnimationFrame(tick);
+  }
+}
+
 function showGroupTab(id) {
   document.querySelectorAll(".bottom-nav--group .nav-btn").forEach((b) =>
     b.classList.toggle("active", b.dataset.gtab === id));
   document.querySelectorAll(".gtab-page").forEach((p) =>
     p.classList.toggle("active", p.id === id));
   $("btn-fab-group").style.display = id === "gpage-feed" ? "" : "none";
+  // Lucky draw khi mở 3 trang số liệu
+  if (["gpage-settle", "gpage-balances", "gpage-totals"].includes(id)) {
+    rollNumbers($(id));
+  }
 }
 
 /* ─────────────── ĐỒNG BỘ TỪNG NHÓM ─────────────── */
@@ -1727,7 +1798,8 @@ function renderHome() {
         <span class="group-card-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 5.25L11.5 2.25C11.5 1.698 11.052 1.25 10.5 1.25H5C4.448 1.25 4 1.698 4 2.25L6 5.25H9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.75 5.25V3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.156 7.75C11.434 6.69 10.515 5.794 9.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 5.25C3.609 6.531 1.75 9.766 1.75 12.5C1.75 15.814 4.436 16.75 7.75 16.75C7.7923 16.75 7.83449 16.7498 7.87659 16.7495" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.25 7.75H11.75C11.198 7.75 10.75 8.198 10.75 8.75V9.75C10.75 10.302 11.198 10.75 11.75 10.75H16.25C16.802 10.75 17.25 10.302 17.25 9.75V8.75C17.25 8.198 16.802 7.75 16.25 7.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.25 10.75H10.75C10.198 10.75 9.75 11.198 9.75 11.75V12.75C9.75 13.302 10.198 13.75 10.75 13.75H15.25C15.802 13.75 16.25 13.302 16.25 12.75V11.75C16.25 11.198 15.802 10.75 15.25 10.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.25 13.75H11.75C11.198 13.75 10.75 14.198 10.75 14.75V15.75C10.75 16.302 11.198 16.75 11.75 16.75H16.25C16.802 16.75 17.25 16.302 17.25 15.75V14.75C17.25 14.198 16.802 13.75 16.25 13.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="group-card-info">
           <span class="group-card-name">${escapeHTML(g.name)}</span>
-          <span class="group-card-status ${cls}">${txt} · ${g.members.length} người</span>
+          <span class="group-card-status ${cls}">${txt}</span>
+          <span class="group-card-members">${g.members.length} người</span>
         </span>
         <span class="group-card-arrow">›</span>
       </button>`;
@@ -1929,9 +2001,15 @@ function renderTotalsPage(code, g) {
     if ((paid[m] || 0) > richVal) { richVal = paid[m]; richId = m; }
     if ((balances[m] || 0) < poorVal) { poorVal = balances[m]; poorId = m; }
   }
-  const badgesOf = (m) =>
-    (m === richId && richVal > 0 ? '<span class="badge badge--rich">👑 Phú hộ</span>' : "") +
-    (m === poorId && poorVal < -0.5 ? '<span class="badge badge--poor">🥲 Nghèo nhất xóm</span>' : "");
+  const badgesOf = (m) => {
+    const isRich = m === richId && richVal > 0;
+    const list =
+      (isRich ? '<span class="badge badge--rich">👑 Phú hộ</span>' : "") +
+      // Phú hộ hiển nhiên thoát nghèo rồi, khỏi đeo thêm
+      (!isRich && (balances[m] || 0) > -0.5 ? '<span class="badge badge--free">🌱 Thoát nghèo</span>' : "") +
+      (m === poorId && poorVal < -0.5 ? '<span class="badge badge--poor">🥲 Nghèo nhất xóm</span>' : "");
+    return list ? `<span class="tot-badges">${list}</span>` : "";
+  };
 
   $("totals-list").innerHTML = ordered.map((m) => {
     // Diễn đạt tự giải thích: chi giùm (trả kèo) / phần của mình / tiền cấn nợ / chốt trạng thái
@@ -2122,10 +2200,18 @@ function bindEvents() {
       $("form-register").classList.toggle("hidden", btn.dataset.authTab !== "register");
     }));
 
+  // Autofill điền số có khoảng cách / +84 → tự làm sạch ngay trên field
+  for (const id of ["login-phone", "reg-phone"]) {
+    $(id).addEventListener("input", () => {
+      const clean = normalizePhone($(id).value);
+      if ($(id).value !== clean) $(id).value = clean;
+    });
+  }
+
   $("form-register").addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = $("reg-name").value.trim();
-    const phone = $("reg-phone").value.trim();
+    const phone = normalizePhone($("reg-phone").value);
     const pass = $("reg-pass").value.trim();
     if (!/^0\d{8,10}$/.test(phone)) return showError($("auth-error"), "SĐT chưa đúng (bắt đầu bằng 0, 9-11 số).");
     if (!/^\d{6}$/.test(pass)) return showError($("auth-error"), "Passcode phải đúng 6 chữ số nhé.");
@@ -2144,7 +2230,7 @@ function bindEvents() {
 
   $("form-login").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const phone = $("login-phone").value.trim();
+    const phone = normalizePhone($("login-phone").value);
     const pass = $("login-pass").value.trim();
     if (!/^0\d{8,10}$/.test(phone)) return showError($("auth-error"), "SĐT chưa đúng (bắt đầu bằng 0, 9-11 số).");
     try {
