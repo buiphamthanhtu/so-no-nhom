@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#fdfbf3">
   <title>Sổ Nợ Nhóm — Chia tiền kiểu Splitwise</title>
-  <meta name="description" content="Sổ nợ nhóm theo flow Splitwise: nhiều nhóm, tổng quan ai nợ ai, settle up. Miễn phí, đồng bộ real-time.">
+  <meta name="description" content="Sổ nợ nhóm: đăng nhập SĐT, ghi chi tiêu chung, tự tính ai chuyển cho ai. Đồng bộ real-time, miễn phí.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Itim&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -96,7 +96,7 @@ body::before {
   display: flex; align-items: center; justify-content: space-between;
 }
 
-input[type="text"], select {
+input[type="text"], input[type="tel"], input[type="password"], select {
   font-family: inherit; font-size: 16px; color: var(--ink);
   background: transparent; border: none;
   border-bottom: 2px dashed var(--ink-soft);
@@ -599,31 +599,76 @@ select {
 .nav-btn--accent:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
 .page-area--group { padding-bottom: calc(var(--nav-h) + 40px); }
 
+/* ═══════ PASSCODE ═══════ */
+.input-pin { letter-spacing: .5em; font-weight: 700; font-size: 18px; }
+
+/* ═══════ ĐĂNG NHẬP SĐT + PASSCODE ═══════ */
+input[type="tel"], input[type="password"] {
+  font-family: inherit; font-size: 16px; color: var(--ink);
+  background: transparent; border: none;
+  border-bottom: 2px dashed var(--ink-soft);
+  padding: 8px 4px; outline: none; border-radius: 0;
+  -webkit-appearance: none; appearance: none;
+}
+input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid var(--ink); }
+.input-pass { letter-spacing: .5em; font-weight: 700; }
+
+/* FAB trong màn hình nhóm: nổi phía trên bottom bar 4 tab */
+#screen-group .fab { bottom: calc(var(--nav-h) + 16px); }
+
 </style>
 </head>
 <body>
 
-<!-- ═════ MÀN 1: NHẬP TÊN LẦN ĐẦU ═════ -->
-<section id="screen-onboard" class="screen">
+<!-- ═════ MÀN 1: ĐĂNG NHẬP / ĐĂNG KÝ ═════ -->
+<section id="screen-auth" class="screen">
   <div class="notebook-cover">
     <div class="cover-label">
       <div class="cover-kicker">Cuốn sổ ghi chung</div>
       <h1 class="cover-title">Sổ Nợ Nhóm</h1>
       <p class="cover-sub">Đi chơi cứ vui — tiền nong đã có sổ lo.</p>
     </div>
+
     <div class="login-card">
-      <form id="form-onboard" class="login-form">
+      <div class="tab-row" role="tablist">
+        <button class="tab-btn active" data-auth-tab="login">Đăng nhập</button>
+        <button class="tab-btn" data-auth-tab="register">Đăng ký</button>
+      </div>
+
+      <form id="form-login" class="login-form">
         <label class="field">
-          <span class="field-label">Bạn tên gì? (bạn bè sẽ thấy tên này trong sổ)</span>
-          <input type="text" id="onboard-name" placeholder="Ví dụ: Tú" maxlength="20" autocomplete="off" required>
+          <span class="field-label">Số điện thoại</span>
+          <input type="tel" id="login-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="11" autocomplete="tel" required>
         </label>
-        <button type="submit" class="btn-primary">Bắt đầu →</button>
+        <label class="field">
+          <span class="field-label">Passcode (6 số)</span>
+          <input type="password" id="login-pass" placeholder="••••••" inputmode="numeric" maxlength="6" class="input-pass" required>
+        </label>
+        <button type="submit" class="btn-primary">Mở sổ →</button>
       </form>
+
+      <form id="form-register" class="login-form hidden">
+        <label class="field">
+          <span class="field-label">Tên của bạn (bạn bè sẽ thấy tên này)</span>
+          <input type="text" id="reg-name" placeholder="Ví dụ: Tú" maxlength="20" autocomplete="off" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Số điện thoại</span>
+          <input type="tel" id="reg-phone" placeholder="Ví dụ: 0901234567" inputmode="numeric" maxlength="11" autocomplete="tel" required>
+        </label>
+        <label class="field">
+          <span class="field-label">Tạo passcode (6 số, để đăng nhập máy khác)</span>
+          <input type="password" id="reg-pass" placeholder="••••••" inputmode="numeric" maxlength="6" class="input-pass" required>
+        </label>
+        <button type="submit" class="btn-primary">Đăng ký ✎</button>
+      </form>
+
+      <p id="auth-error" class="error-msg hidden"></p>
     </div>
   </div>
 </section>
 
-<!-- ═════ MÀN 2: TRANG CHỦ (3 TAB) ═════ -->
+<!-- ═════ MÀN 2: TRANG CHỦ (Nhóm · Tài khoản) ═════ -->
 <section id="screen-home" class="screen">
   <header class="app-header">
     <h2 class="group-name" id="home-title">Nhóm của bạn</h2>
@@ -632,47 +677,39 @@ select {
   <div id="mode-banner" class="mode-banner hidden"></div>
 
   <main class="page-area">
-    <!-- TAB NHÓM: danh sách nhóm như Splitwise Groups -->
     <div id="tab-groups" class="tab-page active">
       <p id="overall-balance" class="overall-balance">…</p>
       <div id="group-cards" class="group-cards"></div>
-
       <div id="groups-empty" class="empty-state hidden">
         <div class="empty-doodle">✎</div>
         <p>Chưa có sổ nào.<br>Lập sổ mới hoặc nhập mã bạn bè gửi nhé!</p>
       </div>
-
       <div class="home-actions">
         <button id="btn-open-create" class="btn-small">＋ Lập sổ mới</button>
         <button id="btn-open-join" class="btn-small">⌗ Nhập mã vào nhóm</button>
       </div>
     </div>
 
-    <!-- TAB HOẠT ĐỘNG: feed như Splitwise Activity -->
-    <div id="tab-activity" class="tab-page">
-      <div id="activity-list" class="activity-list"></div>
-      <div id="activity-empty" class="empty-state hidden">
-        <div class="empty-doodle">🕰</div>
-        <p>Chưa có hoạt động nào.</p>
-      </div>
-    </div>
-
-    <!-- TAB TÀI KHOẢN -->
     <div id="tab-account" class="tab-page">
       <div class="summary-block">
         <h3 class="ruled-heading">Tài khoản</h3>
         <div class="member-row">
           <span class="member-avatar" id="account-avatar">?</span>
-          <span id="account-name">…</span>
-          <span class="member-you">bạn</span>
+          <span id="account-phone" style="color:var(--ink-soft)">…</span>
         </div>
-        <p class="hint">Tên là "chữ ký" của bạn trong mọi cuốn sổ. Muốn đổi tên, hãy rời app và vào lại (dữ liệu nhóm vẫn còn nguyên).</p>
+        <div class="add-member-row">
+          <input type="text" id="account-name-input" placeholder="Tên hiển thị" maxlength="20" autocomplete="off">
+          <button type="button" id="btn-save-name" class="btn-small">Đổi tên</button>
+        </div>
+        <p class="hint">Đổi tên ở đây là mọi khoản chi cũ trong tất cả các sổ đều hiện tên mới luôn.</p>
       </div>
+
       <div class="summary-block">
         <h3 class="ruled-heading">Sổ đang tham gia</h3>
         <div id="account-groups" class="member-list"></div>
       </div>
-      <button id="btn-reset" class="btn-ghost">Rời app (xóa tên khỏi máy này)</button>
+
+      <button id="btn-logout" class="btn-ghost">Đăng xuất</button>
     </div>
   </main>
 
@@ -680,12 +717,11 @@ select {
 
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="tab-groups"><span class="nav-icon">🧾</span><span>Nhóm</span></button>
-    <button class="nav-btn" data-tab="tab-activity"><span class="nav-icon">🕰</span><span>Hoạt động</span></button>
     <button class="nav-btn" data-tab="tab-account"><span class="nav-icon">👤</span><span>Tài khoản</span></button>
   </nav>
 </section>
 
-<!-- ═════ MÀN 3: CHI TIẾT NHÓM ═════ -->
+<!-- ═════ MÀN 3: CHI TIẾT NHÓM (4 trang) ═════ -->
 <section id="screen-group" class="screen">
   <header class="app-header">
     <button id="btn-back" class="btn-back" aria-label="Quay lại">‹</button>
@@ -698,20 +734,49 @@ select {
   </header>
 
   <main class="page-area page-area--group">
-    <div id="my-group-status" class="my-group-status">…</div>
-    <div id="group-feed" class="feed"></div>
-    <div id="group-empty" class="empty-state hidden">
-      <div class="empty-doodle">✎</div>
-      <p>Sổ còn trắng tinh.<br>Bấm <strong>＋ Ghi khoản chi</strong> để mở hàng!</p>
+    <!-- Trang 1: Sổ chi -->
+    <div id="gpage-feed" class="gtab-page active">
+      <div id="my-group-status" class="my-group-status">…</div>
+      <div id="group-feed" class="feed"></div>
+      <div id="group-empty" class="empty-state hidden">
+        <div class="empty-doodle">✎</div>
+        <p>Sổ còn trắng tinh.<br>Bấm <strong>＋ Ghi khoản chi</strong> để mở hàng!</p>
+      </div>
+    </div>
+
+    <!-- Trang 2: Cấn nợ -->
+    <div id="gpage-settle" class="gtab-page">
+      <h3 class="ruled-heading">⚖️ Cấn nợ tối ưu</h3>
+      <p class="hint" style="margin-bottom:12px">Ít lần chuyển khoản nhất có thể. Chuyển xong bấm <b>✓ Đã chuyển</b> để sổ tự trừ.</p>
+      <div id="settle-list" class="settle-list"></div>
+    </div>
+
+    <!-- Trang 3: Số dư -->
+    <div id="gpage-balances" class="gtab-page">
+      <h3 class="ruled-heading">👥 Số dư từng người</h3>
+      <div id="balance-list" class="balance-list"></div>
+      <form id="form-add-member" class="add-member-row">
+        <input type="text" id="new-member-name" placeholder="Thêm người chưa có tài khoản" maxlength="20" autocomplete="off">
+        <button type="submit" class="btn-small">Thêm</button>
+      </form>
+      <p class="hint">Gửi mã nhóm cho bạn bè — ai đăng ký tài khoản rồi vào bằng mã sẽ tự có tên trong sổ.</p>
+    </div>
+
+    <!-- Trang 4: Tổng chi -->
+    <div id="gpage-totals" class="gtab-page">
+      <h3 class="ruled-heading">∑ Tổng chi của nhóm</h3>
+      <p id="totals-amount" class="total-amount">0 ₫</p>
+      <div id="totals-list" class="balance-list" style="margin-top:12px"></div>
     </div>
   </main>
 
-  <!-- Bottom bar của nhóm: Cấn nợ · Số dư · Tổng chi · Ghi chi -->
+  <button id="btn-fab-group" class="fab">＋ Ghi khoản chi</button>
+
   <nav class="bottom-nav bottom-nav--group">
-    <button id="btn-pill-settle" class="nav-btn"><span class="nav-icon">⚖️</span><span>Cấn nợ</span></button>
-    <button id="btn-pill-balances" class="nav-btn"><span class="nav-icon">👥</span><span>Số dư</span></button>
-    <button id="btn-pill-totals" class="nav-btn"><span class="nav-icon">∑</span><span>Tổng chi</span></button>
-    <button id="btn-fab-group" class="nav-btn nav-btn--accent"><span class="nav-icon">＋</span><span>Ghi chi</span></button>
+    <button class="nav-btn active" data-gtab="gpage-feed"><span class="nav-icon">🧾</span><span>Sổ chi</span></button>
+    <button class="nav-btn" data-gtab="gpage-settle"><span class="nav-icon">⚖️</span><span>Cấn nợ</span></button>
+    <button class="nav-btn" data-gtab="gpage-balances"><span class="nav-icon">👥</span><span>Số dư</span></button>
+    <button class="nav-btn" data-gtab="gpage-totals"><span class="nav-icon">∑</span><span>Tổng chi</span></button>
   </nav>
 </section>
 
@@ -723,7 +788,6 @@ select {
       <button class="tab-btn active" data-join-tab="join">Nhập mã vào nhóm</button>
       <button class="tab-btn" data-join-tab="create">Lập sổ mới</button>
     </div>
-
     <form id="form-join" class="login-form">
       <label class="field">
         <span class="field-label">Mã nhóm (bạn bè gửi cho bạn)</span>
@@ -731,7 +795,6 @@ select {
       </label>
       <button type="submit" class="btn-primary">Mở sổ →</button>
     </form>
-
     <form id="form-create" class="login-form hidden">
       <label class="field">
         <span class="field-label">Tên chuyến đi / nhóm</span>
@@ -739,7 +802,6 @@ select {
       </label>
       <button type="submit" class="btn-primary">Lập sổ mới ✎</button>
     </form>
-
     <p id="join-error" class="error-msg hidden"></p>
   </div>
 </div>
@@ -754,28 +816,23 @@ select {
         <span class="field-label">Cùng nhóm</span>
         <select id="exp-group" required></select>
       </label>
-
       <label class="field">
         <span class="field-label">Chi cho việc gì?</span>
         <input type="text" id="exp-desc" placeholder="Ví dụ: Ăn hải sản tối" maxlength="60" autocomplete="off" required>
       </label>
-
       <label class="field">
         <span class="field-label">Số tiền (₫) — gõ 250 hoặc 250k đều hiểu</span>
         <input type="text" id="exp-amount" placeholder="Ví dụ: 250k" inputmode="numeric" autocomplete="off" required>
         <span id="exp-amount-preview" class="amount-preview"></span>
       </label>
-
       <label class="field">
         <span class="field-label">Ai trả tiền?</span>
         <select id="exp-payer" required></select>
       </label>
-
       <div class="field">
         <span class="field-label">Chia cho những ai? <button type="button" id="btn-check-all" class="btn-link">Chọn hết / Bỏ hết</button></span>
         <div id="exp-participants" class="checkbox-grid"></div>
       </div>
-
       <div class="field">
         <span class="field-label">Chia kiểu gì?</span>
         <div class="tab-row tab-row--3">
@@ -786,48 +843,12 @@ select {
         <div id="custom-splits" class="custom-splits hidden"></div>
         <p id="split-check" class="split-check"></p>
       </div>
-
       <p id="expense-error" class="error-msg hidden"></p>
-
       <div class="modal-actions">
         <button type="button" id="btn-cancel-expense" class="btn-ghost">Thôi</button>
         <button type="submit" class="btn-primary">Ghi vào sổ ✓</button>
       </div>
     </form>
-  </div>
-</div>
-
-<!-- ═════ MODAL: CẤN NỢ (SETTLE UP) ═════ -->
-<div id="modal-settle" class="modal-backdrop hidden">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h3 class="modal-title">⚖️ Cấn nợ tối ưu</h3>
-    <p class="hint" style="margin-bottom:12px">Ít lần chuyển khoản nhất có thể. Chuyển xong bấm <b>✓ Đã chuyển</b> để sổ tự trừ.</p>
-    <div id="settle-list" class="settle-list"></div>
-  </div>
-</div>
-
-<!-- ═════ MODAL: SỐ DƯ ═════ -->
-<div id="modal-balances" class="modal-backdrop hidden">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h3 class="modal-title">👥 Số dư từng người</h3>
-    <div id="balance-list" class="balance-list"></div>
-    <form id="form-add-member" class="add-member-row">
-      <input type="text" id="new-member-name" placeholder="Thêm người vào sổ" maxlength="20" autocomplete="off">
-      <button type="submit" class="btn-small">Thêm</button>
-    </form>
-    <p class="hint">Gửi mã nhóm cho bạn bè — ai vào bằng mã sẽ tự có tên trong sổ.</p>
-  </div>
-</div>
-
-<!-- ═════ MODAL: TỔNG CHI ═════ -->
-<div id="modal-totals" class="modal-backdrop hidden">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <h3 class="modal-title">∑ Tổng chi của nhóm</h3>
-    <p id="totals-amount" class="total-amount">0 ₫</p>
-    <div id="totals-list" class="balance-list" style="margin-top:12px"></div>
   </div>
 </div>
 
@@ -847,11 +868,11 @@ select {
 
 <script type="module">
 /* ═══════════════════════════════════════════════════════════
-   SỔ NỢ NHÓM — flow chuẩn Splitwise
-   2 chế độ: ☁️ Firebase (đồng bộ real-time) / 📱 chạy thử trên máy
+   SỔ NỢ NHÓM — flow Splitwise + tài khoản SĐT/passcode
+   Danh tính = ID; tên hiển thị tách riêng → đổi tên lan tỏa mọi nơi
    ═══════════════════════════════════════════════════════════ */
 
-// ▼▼▼ BƯỚC DUY NHẤT ĐỂ BẬT ĐỒNG BỘ NHÓM: dán firebaseConfig vào đây ▼▼▼
+// ▼▼▼ firebaseConfig của bạn ▼▼▼
 const firebaseConfig = {
   apiKey: "AIzaSyCqDpG5m9wtB9GnZlZ0iVia1ApF5C67m9w",
   authDomain: "so-no-nhom.firebaseapp.com",
@@ -860,12 +881,11 @@ const firebaseConfig = {
   messagingSenderId: "946756302746",
   appId: "1:946756302746:web:4e8fde13d962515cba2c23"
 };
-// ▲▲▲ Chưa dán vẫn dùng được: app chạy chế độ thử, lưu trên máy này ▲▲▲
+// ▲▲▲ ───────────────────────── ▲▲▲
 
-const FORCE_OFFLINE = false; // bản test-offline sẽ là true
+const FORCE_OFFLINE = false;
 
-
-/* Bộ nhớ an toàn: nơi nào chặn localStorage (iframe preview) thì dùng bộ nhớ tạm */
+/* ─────────────── BỘ NHỚ AN TOÀN + XÁC NHẬN ─────────────── */
 const store = (() => {
   try {
     const t = "__sono_test__";
@@ -882,7 +902,6 @@ const store = (() => {
   }
 })();
 
-/* Hộp thoại xác nhận trong app (confirm() hệ thống bị chặn trong iframe) */
 function askConfirm(msg) {
   return new Promise((resolve) => {
     document.getElementById("confirm-text").textContent = msg;
@@ -896,22 +915,51 @@ function askConfirm(msg) {
   });
 }
 
+/* Băm passcode (SHA-256, muối = SĐT); có fallback nơi thiếu crypto.subtle */
+async function hashPass(phone, pass) {
+  const text = phone + ":" + pass + ":sono";
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  } catch {
+    let h = 5381;
+    for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+    return "djb2_" + h.toString(16);
+  }
+}
+
 /* ─────────────── LỚP DỮ LIỆU: CLOUD hoặc LOCAL ─────────────── */
 let api = null;
 let MODE = "local";
 
 function firebaseApi(db, fs) {
   return {
+    /* users */
+    async getUser(phone) {
+      const s = await fs.getDoc(fs.doc(db, "users", phone));
+      return s.exists() ? s.data() : null;
+    },
+    async createUser(phone, data) {
+      await fs.setDoc(fs.doc(db, "users", phone), { ...data, createdAt: fs.serverTimestamp() });
+    },
+    async updateUser(phone, patch) {
+      await fs.updateDoc(fs.doc(db, "users", phone), patch);
+    },
+    /* groups */
     async getGroup(code) {
       const s = await fs.getDoc(fs.doc(db, "groups", code));
       return s.exists() ? s.data() : null;
     },
-    async createGroup(code, name, member) {
+    async createGroup(code, gname, uid, name) {
       await fs.setDoc(fs.doc(db, "groups", code),
-        { name, members: [member], createdAt: fs.serverTimestamp() });
+        { name: gname, members: [uid], names: { [uid]: name }, createdAt: fs.serverTimestamp() });
     },
-    async addMember(code, n) {
-      await fs.updateDoc(fs.doc(db, "groups", code), { members: fs.arrayUnion(n) });
+    async joinGroup(code, uid, name) {
+      await fs.updateDoc(fs.doc(db, "groups", code),
+        { members: fs.arrayUnion(uid), ["names." + uid]: name });
+    },
+    async renameInGroup(code, uid, name) {
+      await fs.updateDoc(fs.doc(db, "groups", code), { ["names." + uid]: name });
     },
     watch(code, onGroup, onEntries) {
       const u1 = fs.onSnapshot(fs.doc(db, "groups", code),
@@ -933,33 +981,49 @@ function firebaseApi(db, fs) {
 }
 
 function localApi() {
-  const KEY = "sono_local_db";
-  const load = () => { try { return JSON.parse(store.getItem(KEY)) || {}; } catch { return {}; } };
-  const save = (d) => store.setItem(KEY, JSON.stringify(d));
-  const listeners = {}; // code -> Set
+  const GKEY = "sono_local_db";
+  const UKEY = "sono_local_users";
+  const load = (k) => { try { return JSON.parse(store.getItem(k)) || {}; } catch { return {}; } };
+  const save = (k, d) => store.setItem(k, JSON.stringify(d));
+  const listeners = {};
 
   function emit(code) {
-    const d = load()[code];
+    const d = load(GKEY)[code];
     for (const l of listeners[code] || []) {
-      l.onGroup(d ? { name: d.name, members: d.members } : null);
+      l.onGroup(d ? { name: d.name, members: d.members, names: d.names || {} } : null);
       l.onEntries(d ? [...d.entries].sort((a, b) => b.createdAt - a.createdAt) : []);
     }
   }
   return {
+    async getUser(phone) { return load(UKEY)[phone] || null; },
+    async createUser(phone, data) { const u = load(UKEY); u[phone] = data; save(UKEY, u); },
+    async updateUser(phone, patch) {
+      const u = load(UKEY);
+      if (u[phone]) { Object.assign(u[phone], patch); save(UKEY, u); }
+    },
     async getGroup(code) {
-      const d = load()[code];
-      return d ? { name: d.name, members: d.members } : null;
+      const d = load(GKEY)[code];
+      return d ? { name: d.name, members: d.members, names: d.names || {} } : null;
     },
-    async createGroup(code, name, member) {
-      const db = load();
-      db[code] = { name, members: [member], entries: [] };
-      save(db); emit(code);
+    async createGroup(code, gname, uid, name) {
+      const db = load(GKEY);
+      db[code] = { name: gname, members: [uid], names: { [uid]: name }, entries: [] };
+      save(GKEY, db); emit(code);
     },
-    async addMember(code, n) {
-      const db = load();
+    async joinGroup(code, uid, name) {
+      const db = load(GKEY);
       if (!db[code]) return;
-      if (!db[code].members.includes(n)) db[code].members.push(n);
-      save(db); emit(code);
+      db[code].names = db[code].names || {};
+      if (!db[code].members.includes(uid)) db[code].members.push(uid);
+      db[code].names[uid] = name;
+      save(GKEY, db); emit(code);
+    },
+    async renameInGroup(code, uid, name) {
+      const db = load(GKEY);
+      if (!db[code]) return;
+      db[code].names = db[code].names || {};
+      db[code].names[uid] = name;
+      save(GKEY, db); emit(code);
     },
     watch(code, onGroup, onEntries) {
       (listeners[code] ??= new Set());
@@ -969,20 +1033,20 @@ function localApi() {
       return () => listeners[code].delete(l);
     },
     async addEntry(code, en) {
-      const db = load();
+      const db = load(GKEY);
       if (!db[code]) return;
       db[code].entries.push({
         ...en,
         id: "e" + Date.now() + Math.random().toString(36).slice(2, 6),
         createdAt: Date.now(),
       });
-      save(db); emit(code);
+      save(GKEY, db); emit(code);
     },
     async deleteEntry(code, id) {
-      const db = load();
+      const db = load(GKEY);
       if (!db[code]) return;
       db[code].entries = db[code].entries.filter((e) => e.id !== id);
-      save(db); emit(code);
+      save(GKEY, db); emit(code);
     },
   };
 }
@@ -1009,17 +1073,14 @@ async function initBackend() {
 
 /* ─────────────── TRẠNG THÁI ─────────────── */
 const state = {
-  name: null,
-  joined: [],
-  data: {},        // data[code] = { name, members, entries }
-  subs: {},
-  currentGroup: null,
-  splitMode: "equal",
+  phone: null, uid: null, name: null,
+  joined: [], data: {}, subs: {},
+  currentGroup: null, splitMode: "equal",
 };
 
-const STORAGE_KEY = "sono_v2";
-const saveLocal = () =>
-  store.setItem(STORAGE_KEY, JSON.stringify({ name: state.name, groups: state.joined }));
+const SESSION_KEY = "sono_v3";
+const saveSession = () => store.setItem(SESSION_KEY,
+  JSON.stringify({ phone: state.phone, uid: state.uid, name: state.name, groups: state.joined }));
 
 /* ─────────────── TIỆN ÍCH ─────────────── */
 const $ = (id) => document.getElementById(id);
@@ -1071,26 +1132,26 @@ function monthLabel(d) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 const monthShort = (d) => "thg " + (d.getMonth() + 1);
-const timeShort = (ts) => entryDate(ts).toLocaleString("vi-VN",
-  { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" });
 
-// Quy khẩu phần thành số tiền, người cuối nhận phần dư làm tròn để tổng khớp tuyệt đối
+/* Tên hiển thị từ ID (dữ liệu cũ lưu tên thô thì hiện y nguyên) */
+const nameOf = (g, id) => (g?.names?.[id]) || id;
+
+function shareOf(entry, id) {
+  if (!entry.participants?.includes(id)) return 0;
+  if (entry.splits && entry.splits[id] != null) return entry.splits[id];
+  return entry.amount / entry.participants.length;
+}
+
 function splitsFromShares(total, shares) {
-  const names = Object.keys(shares).filter((n) => shares[n] > 0);
-  const sum = names.reduce((s, n) => s + shares[n], 0);
+  const ids = Object.keys(shares).filter((n) => shares[n] > 0);
+  const sum = ids.reduce((s, n) => s + shares[n], 0);
   const out = {};
   let acc = 0;
-  names.forEach((n, i) => {
-    if (i === names.length - 1) out[n] = total - acc;
+  ids.forEach((n, i) => {
+    if (i === ids.length - 1) out[n] = total - acc;
     else { const v = Math.round((total * shares[n]) / sum); out[n] = v; acc += v; }
   });
   return out;
-}
-
-function shareOf(entry, name) {
-  if (!entry.participants?.includes(name)) return 0;
-  if (entry.splits && entry.splits[name] != null) return entry.splits[name];
-  return entry.amount / entry.participants.length;
 }
 
 /* ─────────────── TÍNH TOÁN ─────────────── */
@@ -1133,7 +1194,7 @@ function computeSettlements(balances) {
   return result;
 }
 
-const myBalanceIn = (code) => (computeBalances(state.data[code])[state.name] || 0);
+const myBalanceIn = (code) => (computeBalances(state.data[code])[state.uid] || 0);
 
 /* ─────────────── ĐIỀU HƯỚNG ─────────────── */
 function showScreen(id) {
@@ -1146,15 +1207,24 @@ function closeAllModals() {
   document.querySelectorAll(".modal-backdrop").forEach((m) => m.classList.add("hidden"));
 }
 
+function showGroupTab(id) {
+  document.querySelectorAll(".bottom-nav--group .nav-btn").forEach((b) =>
+    b.classList.toggle("active", b.dataset.gtab === id));
+  document.querySelectorAll(".gtab-page").forEach((p) =>
+    p.classList.toggle("active", p.id === id));
+  $("btn-fab-group").style.display = id === "gpage-feed" ? "" : "none";
+}
+
 /* ─────────────── ĐỒNG BỘ TỪNG NHÓM ─────────────── */
 function subscribeGroup(code) {
   if (state.subs[code]) return;
-  state.data[code] = state.data[code] || { name: "…", members: [], entries: [] };
+  state.data[code] = state.data[code] || { name: "…", members: [], names: {}, entries: [] };
   state.subs[code] = api.watch(code,
     (g) => {
       if (!g) { removeGroupLocally(code); return; }
       state.data[code].name = g.name;
       state.data[code].members = g.members || [];
+      state.data[code].names = g.names || {};
       renderAll();
     },
     (entries) => {
@@ -1163,21 +1233,22 @@ function subscribeGroup(code) {
     });
 }
 
-function removeGroupLocally(code) {
+async function removeGroupLocally(code) {
   state.subs[code]?.();
   delete state.subs[code];
   delete state.data[code];
   state.joined = state.joined.filter((c) => c !== code);
-  saveLocal();
+  saveSession();
+  try { await api.updateUser(state.phone, { groups: state.joined }); } catch { /* bỏ qua */ }
   if (state.currentGroup === code) { state.currentGroup = null; showScreen("screen-home"); }
   renderAll();
 }
 
-/* ─────────────── KHỞI ĐỘNG ─────────────── */
+/* ─────────────── KHỞI ĐỘNG SAU ĐĂNG NHẬP ─────────────── */
 function boot() {
-  if (!state.name) { showScreen("screen-onboard"); return; }
-  $("account-name").textContent = state.name;
-  $("account-avatar").textContent = state.name.charAt(0).toUpperCase();
+  $("account-phone").textContent = "SĐT: " + state.phone;
+  $("account-avatar").textContent = (state.name || "?").charAt(0).toUpperCase();
+  $("account-name-input").value = state.name || "";
   showScreen("screen-home");
   state.joined.forEach(subscribeGroup);
   renderAll();
@@ -1186,14 +1257,12 @@ function boot() {
 /* ─────────────── RENDER ─────────────── */
 function renderAll() {
   renderHome();
-  renderActivity();
   renderAccount();
   if (state.currentGroup) renderGroup();
 }
 
 function renderHome() {
   const cards = $("group-cards");
-
   let overall = 0;
   state.joined.forEach((c) => (overall += myBalanceIn(c)));
 
@@ -1238,6 +1307,7 @@ function renderHome() {
 function openGroup(code) {
   state.currentGroup = code;
   showScreen("screen-group");
+  showGroupTab("gpage-feed");
   renderGroup();
 }
 
@@ -1255,12 +1325,19 @@ function renderGroup() {
   else if (mine < -0.5) { st.textContent = `Trong sổ này, bạn còn nợ ${fmtVND(-mine)}`; st.className = "my-group-status negative"; }
   else { st.textContent = "Trong sổ này, bạn đang cân bằng ✓"; st.className = "my-group-status zero"; }
 
+  renderFeedPage(code, g);
+  renderSettlePage(code, g);
+  renderBalancesPage(code, g);
+  renderTotalsPage(code, g);
+}
+
+function renderFeedPage(code, g) {
   const feed = $("group-feed");
   const empty = $("group-empty");
   if (!g.entries.length) { feed.innerHTML = ""; empty.classList.remove("hidden"); return; }
   empty.classList.add("hidden");
 
-  const me = state.name;
+  const me = state.uid;
   let html = "", lastMonth = "";
 
   for (const en of g.entries) {
@@ -1269,6 +1346,8 @@ function renderGroup() {
     if (mLabel !== lastMonth) { html += `<p class="month-heading">${mLabel}</p>`; lastMonth = mLabel; }
 
     const dateBlock = `<span class="feed-date"><span class="d">${d.getDate()}</span><br><span class="m">${monthShort(d)}</span></span>`;
+    const delBtn = (label) => en.addedBy === me
+      ? `<button class="feed-del" data-del="${en.id}" data-label="${label}">✕</button>` : "";
 
     if (en.type === "settlement") {
       html += `
@@ -1276,10 +1355,10 @@ function renderGroup() {
           ${dateBlock}
           <span class="feed-main">
             <span class="feed-title">💸 Chuyển tiền cấn nợ</span>
-            <span class="feed-sub">${escapeHTML(en.payer)} đã chuyển cho ${escapeHTML(en.to)}</span>
+            <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã chuyển cho ${escapeHTML(nameOf(g, en.to))}</span>
           </span>
           <span class="feed-right lent"><span class="lbl">&nbsp;</span><span class="amt">${fmtVND(en.amount)}</span></span>
-          ${en.addedBy === me ? `<button class="feed-del" data-del="${en.id}" data-label="chuyển tiền ${escapeHTML(en.payer)} → ${escapeHTML(en.to)}">✕</button>` : ""}
+          ${delBtn("chuyển tiền " + escapeHTML(nameOf(g, en.payer)) + " → " + escapeHTML(nameOf(g, en.to)))}
         </div>`;
       continue;
     }
@@ -1297,15 +1376,19 @@ function renderGroup() {
       right = `<span class="feed-right none"><span class="lbl">bạn</span><span class="amt">không tham gia</span></span>`;
     }
 
+    const splitDesc = en.shares
+      ? "chia theo phần: " + en.participants.map((p) => escapeHTML(nameOf(g, p)) + " ×" + en.shares[p]).join(", ")
+      : "chia " + en.participants.length + " người";
+
     html += `
       <div class="feed-row">
         ${dateBlock}
         <span class="feed-main">
           <span class="feed-title">${escapeHTML(en.desc)}</span>
-          <span class="feed-sub">${escapeHTML(en.payer)} đã trả ${fmtVND(en.amount)} · ${en.shares ? "chia theo phần: " + en.participants.map((p) => escapeHTML(p) + " ×" + en.shares[p]).join(", ") : "chia " + en.participants.length + " người"}</span>
+          <span class="feed-sub">${escapeHTML(nameOf(g, en.payer))} đã trả ${fmtVND(en.amount)} · ${splitDesc}</span>
         </span>
         ${right}
-        ${en.addedBy === me ? `<button class="feed-del" data-del="${en.id}" data-label="${escapeHTML(en.desc)}">✕</button>` : ""}
+        ${delBtn(escapeHTML(en.desc))}
       </div>`;
   }
 
@@ -1317,43 +1400,41 @@ function renderGroup() {
     }));
 }
 
-function renderSettleModal() {
-  const code = state.currentGroup;
-  const settlements = computeSettlements(computeBalances(state.data[code]));
+function renderSettlePage(code, g) {
+  const settlements = computeSettlements(computeBalances(g));
   $("settle-list").innerHTML = settlements.length === 0
     ? `<div class="settle-done">🎉 Cả nhóm đã cân bằng — không ai nợ ai!</div>`
     : settlements.map((s, i) => `
         <div class="settle-row">
           <span class="settle-text">
-            <span class="who">${escapeHTML(s.from)}</span> chuyển cho
-            <span class="who">${escapeHTML(s.to)}</span>
+            <span class="who">${escapeHTML(nameOf(g, s.from))}</span> chuyển cho
+            <span class="who">${escapeHTML(nameOf(g, s.to))}</span>
             → <span class="money">${fmtVND(s.amount)}</span>
           </span>
           <button class="btn-settle" data-i="${i}">✓ Đã chuyển</button>
         </div>`).join("");
   $("settle-list").querySelectorAll("[data-i]").forEach((btn) => {
     const s = settlements[Number(btn.dataset.i)];
-    btn.addEventListener("click", () => recordSettlement(code, s.from, s.to, Math.round(s.amount)));
+    btn.addEventListener("click", () =>
+      recordSettlement(code, s.from, s.to, Math.round(s.amount),
+        nameOf(g, s.from), nameOf(g, s.to)));
   });
 }
 
-function renderBalancesModal() {
-  const code = state.currentGroup;
-  const balances = computeBalances(state.data[code]);
+function renderBalancesPage(code, g) {
+  const balances = computeBalances(g);
   $("balance-list").innerHTML = Object.entries(balances)
     .sort((a, b) => b[1] - a[1])
-    .map(([name, v]) => {
+    .map(([id, v]) => {
       const cls = v > 0.5 ? "positive" : v < -0.5 ? "negative" : "";
       const label = v > 0.5 ? `được nhận ${fmtVND(v)}` : v < -0.5 ? `còn thiếu ${fmtVND(-v)}` : "đã cân bằng ✓";
       return `<div class="balance-row ${cls}">
-        <span>${escapeHTML(name)}${name === state.name ? " (bạn)" : ""}</span>
+        <span>${escapeHTML(nameOf(g, id))}${id === state.uid ? " (bạn)" : ""}</span>
         <span class="balance-val">${label}</span></div>`;
     }).join("");
 }
 
-function renderTotalsModal() {
-  const code = state.currentGroup;
-  const g = state.data[code];
+function renderTotalsPage(code, g) {
   const expenses = (g.entries || []).filter((e) => e.type !== "settlement");
   const total = expenses.reduce((s, e) => s + e.amount, 0);
   $("totals-amount").textContent = fmtVND(total);
@@ -1366,31 +1447,9 @@ function renderTotalsModal() {
   }
   $("totals-list").innerHTML = g.members.map((m) => `
     <div class="balance-row">
-      <span>${escapeHTML(m)}${m === state.name ? " (bạn)" : ""}</span>
+      <span>${escapeHTML(nameOf(g, m))}${m === state.uid ? " (bạn)" : ""}</span>
       <span style="font-size:13px;text-align:right">đã trả <b>${fmtVND(paid[m] || 0)}</b><br>phần phải chịu ${fmtVND(share[m] || 0)}</span>
     </div>`).join("");
-}
-
-function renderActivity() {
-  const rows = [];
-  for (const code of state.joined) {
-    const g = state.data[code];
-    if (!g) continue;
-    for (const en of g.entries || []) {
-      rows.push({ ...en, groupName: g.name, _t: entryDate(en.createdAt).getTime() });
-    }
-  }
-  rows.sort((a, b) => b._t - a._t);
-  const top = rows.slice(0, 40);
-
-  $("activity-empty").classList.toggle("hidden", top.length !== 0);
-  $("activity-list").innerHTML = top.map((en) => {
-    const time = `<span class="activity-time">${timeShort(en.createdAt)}</span>`;
-    if (en.type === "settlement") {
-      return `<div class="activity-row">💸 <b>${escapeHTML(en.payer)}</b> đã chuyển ${fmtVND(en.amount)} cho <b>${escapeHTML(en.to)}</b> trong <span class="act-group">${escapeHTML(en.groupName)}</span>${time}</div>`;
-    }
-    return `<div class="activity-row">🧾 <b>${escapeHTML(en.addedBy || en.payer)}</b> đã ghi «${escapeHTML(en.desc)}» ${fmtVND(en.amount)} trong <span class="act-group">${escapeHTML(en.groupName)}</span>${time}</div>`;
-  }).join("");
 }
 
 function renderAccount() {
@@ -1404,7 +1463,7 @@ function renderAccount() {
         </div>`).join("");
   $("account-groups").querySelectorAll("[data-leave]").forEach((btn) =>
     btn.addEventListener("click", async () => {
-      if (await askConfirm("Rời sổ này trên máy bạn? (dữ liệu nhóm vẫn còn, vào lại bằng mã)")) removeGroupLocally(btn.dataset.leave);
+      if (await askConfirm("Rời sổ này? (dữ liệu nhóm vẫn còn, vào lại bằng mã)")) removeGroupLocally(btn.dataset.leave);
     }));
 }
 
@@ -1415,12 +1474,11 @@ async function deleteEntry(code, id, label) {
   catch (err) { console.error(err); toast("Xóa không thành công"); }
 }
 
-async function recordSettlement(code, from, to, amount) {
-  if (!(await askConfirm(`Xác nhận: ${from} đã chuyển ${fmtVND(amount)} cho ${to}?`))) return;
+async function recordSettlement(code, from, to, amount, fromName, toName) {
+  if (!(await askConfirm(`Xác nhận: ${fromName} đã chuyển ${fmtVND(amount)} cho ${toName}?`))) return;
   try {
-    await api.addEntry(code, { type: "settlement", payer: from, to, amount, addedBy: state.name });
+    await api.addEntry(code, { type: "settlement", payer: from, to, amount, addedBy: state.uid });
     toast("Đã ghi nhận chuyển tiền ✓ Nợ tự trừ rồi nhé");
-    closeAllModals();
   } catch (err) { console.error(err); toast("Ghi nhận không thành công"); }
 }
 
@@ -1440,11 +1498,11 @@ function openExpenseModal(presetCode) {
 }
 
 function rebuildExpensePeople() {
-  const g = state.data[$("exp-group").value] || { members: [] };
+  const g = state.data[$("exp-group").value] || { members: [], names: {} };
   $("exp-payer").innerHTML = g.members.map((m) =>
-    `<option value="${escapeHTML(m)}" ${m === state.name ? "selected" : ""}>${escapeHTML(m)}</option>`).join("");
+    `<option value="${escapeHTML(m)}" ${m === state.uid ? "selected" : ""}>${escapeHTML(nameOf(g, m))}</option>`).join("");
   $("exp-participants").innerHTML = g.members.map((m) =>
-    `<label class="check-chip"><input type="checkbox" value="${escapeHTML(m)}" checked> ${escapeHTML(m)}</label>`).join("");
+    `<label class="check-chip"><input type="checkbox" value="${escapeHTML(m)}" checked> ${escapeHTML(nameOf(g, m))}</label>`).join("");
   refreshCustomSplits();
 }
 
@@ -1452,7 +1510,7 @@ function setSplitMode(mode) {
   state.splitMode = mode;
   document.querySelectorAll(".split-mode").forEach((b) =>
     b.classList.toggle("active", b.dataset.split === mode));
-  $("custom-splits").classList.toggle("hidden", mode !== "custom");
+  $("custom-splits").classList.toggle("hidden", mode === "equal");
   refreshCustomSplits();
 }
 
@@ -1461,6 +1519,7 @@ const checkedParticipants = () =>
 
 function refreshCustomSplits() {
   if (state.splitMode === "equal") { $("split-check").textContent = ""; $("split-check").className = "split-check"; return; }
+  const g = state.data[$("exp-group").value] || { names: {} };
   const people = checkedParticipants();
 
   if (state.splitMode === "custom") {
@@ -1468,19 +1527,18 @@ function refreshCustomSplits() {
     $("custom-splits").querySelectorAll("input[data-name]").forEach((i) => (old[i.dataset.name] = i.value));
     $("custom-splits").innerHTML = people.map((p) => `
       <div class="custom-split-row">
-        <span>${escapeHTML(p)}</span>
+        <span>${escapeHTML(nameOf(g, p))}</span>
         <input type="text" inputmode="numeric" placeholder="0" data-name="${escapeHTML(p)}" value="${escapeHTML(old[p] || "")}">
       </div>`).join("");
     $("custom-splits").querySelectorAll("input").forEach((i) => i.addEventListener("input", updateSplitCheck));
   }
 
   if (state.splitMode === "shares") {
-    // Giữ số phần đã chỉnh khi vẽ lại; mặc định mỗi người 1 phần
     const old = {};
     $("custom-splits").querySelectorAll(".share-num").forEach((el) => (old[el.dataset.name] = Number(el.textContent)));
     $("custom-splits").innerHTML = people.map((p) => `
       <div class="custom-split-row">
-        <span>${escapeHTML(p)}</span>
+        <span>${escapeHTML(nameOf(g, p))}</span>
         <span class="share-stepper">
           <button type="button" class="share-btn" data-share-btn="${escapeHTML(p)}" data-d="-1">−</button>
           <span class="share-num" data-name="${escapeHTML(p)}">${old[p] ?? 1}</span>
@@ -1498,7 +1556,6 @@ function refreshCustomSplits() {
   updateSplitCheck();
 }
 
-// Đọc bảng khẩu phần hiện tại từ UI
 function readShares() {
   const shares = {};
   $("custom-splits").querySelectorAll(".share-num").forEach((el) => {
@@ -1528,8 +1585,8 @@ function updateSplitCheck() {
     }
     const splits = splitsFromShares(total, shares);
     $("custom-splits").querySelectorAll("[data-amt]").forEach((s) => {
-      const name = s.dataset.amt;
-      s.textContent = shares[name] > 0 ? "= " + fmtVND(splits[name]) : "không tính";
+      const id = s.dataset.amt;
+      s.textContent = shares[id] > 0 ? "= " + fmtVND(splits[id]) : "không tính";
     });
     el.textContent = `✓ ${sum} phần · mỗi phần ≈ ${fmtVND(total / sum)}`;
     el.className = "split-check ok";
@@ -1552,27 +1609,106 @@ function bindEvents() {
   document.querySelectorAll(".modal-backdrop").forEach((m) =>
     m.addEventListener("click", (e) => { if (e.target === m) m.classList.add("hidden"); }));
 
+  /* Tab đăng nhập / đăng ký */
+  document.querySelectorAll("[data-auth-tab]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-auth-tab]").forEach((b) =>
+        b.classList.toggle("active", b === btn));
+      $("form-login").classList.toggle("hidden", btn.dataset.authTab !== "login");
+      $("form-register").classList.toggle("hidden", btn.dataset.authTab !== "register");
+    }));
+
+  $("form-register").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("reg-name").value.trim();
+    const phone = $("reg-phone").value.trim();
+    const pass = $("reg-pass").value.trim();
+    if (!/^0\d{8,10}$/.test(phone)) return showError($("auth-error"), "SĐT chưa đúng (bắt đầu bằng 0, 9-11 số).");
+    if (!/^\d{6}$/.test(pass)) return showError($("auth-error"), "Passcode phải đúng 6 chữ số nhé.");
+    if (!name) return;
+    try {
+      if (await api.getUser(phone))
+        return showError($("auth-error"), "SĐT này đã đăng ký rồi — chuyển qua Đăng nhập nhé.");
+      await api.createUser(phone, { name, pass: await hashPass(phone, pass), groups: [] });
+      loginAs(phone, name, []);
+      toast(`Chào ${name}! Tài khoản đã sẵn sàng ✓`);
+    } catch (err) {
+      console.error(err);
+      showError($("auth-error"), "Đăng ký không thành công. Kiểm tra mạng nhé.");
+    }
+  });
+
+  $("form-login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const phone = $("login-phone").value.trim();
+    const pass = $("login-pass").value.trim();
+    if (!/^0\d{8,10}$/.test(phone)) return showError($("auth-error"), "SĐT chưa đúng (bắt đầu bằng 0, 9-11 số).");
+    try {
+      const user = await api.getUser(phone);
+      if (!user) return showError($("auth-error"), "SĐT chưa đăng ký — chuyển qua tab Đăng ký nhé.");
+      if (user.pass !== await hashPass(phone, pass))
+        return showError($("auth-error"), "Passcode chưa đúng, thử lại nhé.");
+      loginAs(phone, user.name, user.groups || []);
+      toast(`Chào ${user.name}, mở sổ nào!`);
+    } catch (err) {
+      console.error(err);
+      showError($("auth-error"), "Đăng nhập không thành công. Kiểm tra mạng nhé.");
+    }
+  });
+
+  /* Tab trang chủ */
   document.querySelectorAll("#screen-home .nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll("#screen-home .nav-btn").forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
       document.querySelectorAll("#screen-home .tab-page").forEach((p) => p.classList.remove("active"));
       $(btn.dataset.tab).classList.add("active");
-      const titles = { "tab-groups": "Nhóm của bạn", "tab-activity": "Hoạt động", "tab-account": "Tài khoản" };
-      $("home-title").textContent = titles[btn.dataset.tab];
+      $("home-title").textContent = btn.dataset.tab === "tab-groups" ? "Nhóm của bạn" : "Tài khoản";
       $("btn-fab-home").style.display = btn.dataset.tab === "tab-groups" ? "" : "none";
     });
   });
 
-  $("form-onboard").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const name = $("onboard-name").value.trim();
-    if (!name) return;
-    state.name = name;
-    saveLocal();
-    boot();
+  /* Tab trong màn hình nhóm → trang mới */
+  document.querySelectorAll(".bottom-nav--group .nav-btn").forEach((btn) =>
+    btn.addEventListener("click", () => showGroupTab(btn.dataset.gtab)));
+
+  /* Đổi tên: lan tỏa mọi sổ */
+  $("btn-save-name").addEventListener("click", async () => {
+    const newName = $("account-name-input").value.trim();
+    if (!newName) return toast("Tên không được để trống nhé");
+    if (newName === state.name) return toast("Tên vẫn vậy mà 😄");
+    const btn = $("btn-save-name");
+    btn.disabled = true;
+    try {
+      await api.updateUser(state.phone, { name: newName });
+      for (const code of state.joined) {
+        await api.renameInGroup(code, state.uid, newName);
+      }
+      state.name = newName;
+      saveSession();
+      $("account-avatar").textContent = newName.charAt(0).toUpperCase();
+      toast(`Đã đổi tên thành ${newName} trên mọi sổ ✓`);
+      renderAll();
+    } catch (err) {
+      console.error(err);
+      toast("Đổi tên không thành công");
+    } finally {
+      btn.disabled = false;
+    }
   });
 
+  $("btn-logout").addEventListener("click", async () => {
+    if (!(await askConfirm("Đăng xuất khỏi máy này? (dữ liệu vẫn còn, đăng nhập lại là thấy)"))) return;
+    Object.values(state.subs).forEach((u) => u());
+    store.removeItem(SESSION_KEY);
+    Object.assign(state, { phone: null, uid: null, name: null, joined: [], data: {}, subs: {}, currentGroup: null });
+    showScreen("screen-auth");
+    // Về đúng tab Đăng nhập, xóa passcode cũ
+    document.querySelector('[data-auth-tab="login"]')?.click();
+    $("login-pass").value = "";
+  });
+
+  /* Lập sổ / nhập mã */
   $("btn-open-join").addEventListener("click", () => { switchJoinTab("join"); $("modal-join").classList.remove("hidden"); });
   $("btn-open-create").addEventListener("click", () => { switchJoinTab("create"); $("modal-join").classList.remove("hidden"); });
   document.querySelectorAll("[data-join-tab]").forEach((btn) =>
@@ -1585,15 +1721,19 @@ function bindEvents() {
     try {
       const g = await api.getGroup(code);
       if (!g) return showError($("join-error"), "Không tìm thấy sổ với mã này. Kiểm tra lại nhé!");
-      if (!(g.members || []).includes(state.name)) await api.addMember(code, state.name);
-      if (!state.joined.includes(code)) { state.joined.push(code); saveLocal(); }
+      await api.joinGroup(code, state.uid, state.name);
+      if (!state.joined.includes(code)) {
+        state.joined.push(code);
+        saveSession();
+        await api.updateUser(state.phone, { groups: state.joined });
+      }
       subscribeGroup(code);
       closeAllModals();
       $("join-code").value = "";
       openGroup(code);
     } catch (err) {
       console.error(err);
-      showError($("join-error"), "Lỗi kết nối. Kiểm tra mạng hoặc cấu hình Firebase.");
+      showError($("join-error"), "Lỗi kết nối. Thử lại nhé.");
     }
   });
 
@@ -1607,9 +1747,10 @@ function bindEvents() {
         code = randomCode();
         if (!(await api.getGroup(code))) break;
       }
-      await api.createGroup(code, groupName, state.name);
+      await api.createGroup(code, groupName, state.uid, state.name);
       state.joined.push(code);
-      saveLocal();
+      saveSession();
+      await api.updateUser(state.phone, { groups: state.joined });
       subscribeGroup(code);
       closeAllModals();
       $("create-group").value = "";
@@ -1617,7 +1758,7 @@ function bindEvents() {
       toast(`Đã lập sổ! Mã: ${code} — gửi cho bạn bè nhé`, 4000);
     } catch (err) {
       console.error(err);
-      showError($("join-error"), "Không tạo được sổ. Kiểm tra cấu hình Firebase.");
+      showError($("join-error"), "Không tạo được sổ. Thử lại nhé.");
     }
   });
 
@@ -1630,17 +1771,31 @@ function bindEvents() {
   $("btn-copy-code").addEventListener("click", async () => {
     const code = state.currentGroup;
     const note = MODE === "local"
-      ? "\n(Lưu ý: sổ đang ở chế độ thử trên máy, bạn bè chưa vào chung được — cần nối Firebase)"
+      ? "\n(Lưu ý: đang chế độ thử trên máy, bạn bè chưa vào chung được)"
       : "";
     const msg = `Vào "Sổ Nợ Nhóm" ghi chi tiêu chung với mình nha!\nMã nhóm: ${code}\nLink: ${location.href.split("#")[0]}${note}`;
     try { await navigator.clipboard.writeText(msg); toast("Đã sao chép mã + link mời bạn bè ✓"); }
     catch { toast("Mã nhóm của bạn: " + code + " — chép tay gửi bạn bè nhé", 5000); }
   });
 
-  $("btn-pill-settle").addEventListener("click", () => { renderSettleModal(); $("modal-settle").classList.remove("hidden"); });
-  $("btn-pill-balances").addEventListener("click", () => { renderBalancesModal(); $("modal-balances").classList.remove("hidden"); });
-  $("btn-pill-totals").addEventListener("click", () => { renderTotalsModal(); $("modal-totals").classList.remove("hidden"); });
+  /* Thêm thành viên chưa có tài khoản */
+  $("form-add-member").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const code = state.currentGroup;
+    const name = $("new-member-name").value.trim();
+    if (!name || !code) return;
+    const g = state.data[code];
+    if (Object.values(g?.names || {}).includes(name))
+      return toast("Tên này đã có trong sổ rồi");
+    try {
+      const mid = "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      await api.joinGroup(code, mid, name);
+      $("new-member-name").value = "";
+      toast(`Đã thêm ${name} vào sổ ✓`);
+    } catch (err) { console.error(err); toast("Thêm không thành công"); }
+  });
 
+  /* Khoản chi */
   $("exp-group").addEventListener("change", rebuildExpensePeople);
   $("btn-fab-home").addEventListener("click", () => openExpenseModal(null));
   $("btn-fab-group").addEventListener("click", () => openExpenseModal(state.currentGroup));
@@ -1675,7 +1830,7 @@ function bindEvents() {
     if (!amount) return showError($("expense-error"), "Số tiền chưa hợp lệ. Ví dụ: 250k hoặc 1.5tr");
     if (participants.length === 0) return showError($("expense-error"), "Chọn ít nhất 1 người cùng chia nhé!");
 
-    const entry = { type: "expense", desc, amount, payer, participants, addedBy: state.name };
+    const entry = { type: "expense", desc, amount, payer, participants, addedBy: state.uid };
 
     if (state.splitMode === "custom") {
       const splits = {};
@@ -1695,7 +1850,7 @@ function bindEvents() {
       const eaters = Object.keys(shares).filter((n) => shares[n] > 0);
       if (eaters.length === 0)
         return showError($("expense-error"), "Cần ít nhất 1 phần nhé!");
-      entry.participants = eaters;           // người 0 phần thì không tính
+      entry.participants = eaters;
       entry.splits = splitsFromShares(amount, shares);
       entry.shares = {};
       eaters.forEach((n) => (entry.shares[n] = shares[n]));
@@ -1715,29 +1870,6 @@ function bindEvents() {
       btn.disabled = false;
     }
   });
-
-  $("form-add-member").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const code = state.currentGroup;
-    const name = $("new-member-name").value.trim();
-    if (!name || !code) return;
-    if ((state.data[code]?.members || []).includes(name)) { toast("Tên này đã có trong sổ rồi"); return; }
-    try {
-      await api.addMember(code, name);
-      $("new-member-name").value = "";
-      toast(`Đã thêm ${name} vào sổ ✓`);
-      setTimeout(renderBalancesModal, 200);
-    } catch (err) { console.error(err); toast("Thêm không thành công"); }
-  });
-
-  $("btn-reset").addEventListener("click", async () => {
-    if (!(await askConfirm("Rời app và xóa tên khỏi máy này? (dữ liệu các nhóm vẫn còn)"))) return;
-    Object.values(state.subs).forEach((u) => u());
-    store.removeItem(STORAGE_KEY);
-    store.removeItem("sono_session");
-    Object.assign(state, { name: null, joined: [], data: {}, subs: {}, currentGroup: null });
-    showScreen("screen-onboard");
-  });
 }
 
 function switchJoinTab(tab) {
@@ -1747,28 +1879,40 @@ function switchJoinTab(tab) {
   $("form-create").classList.toggle("hidden", tab !== "create");
 }
 
+function loginAs(phone, name, groups) {
+  state.phone = phone;
+  state.uid = "p" + phone;
+  state.name = name;
+  state.joined = [...new Set(groups)];
+  saveSession();
+  boot();
+}
+
 /* ─────────────── MAIN ─────────────── */
 (async function main() {
-  try {
-    const saved = JSON.parse(store.getItem(STORAGE_KEY));
-    if (saved?.name) { state.name = saved.name; state.joined = saved.groups || []; }
-    const old = JSON.parse(store.getItem("sono_session"));
-    if (old?.name && !state.name) { state.name = old.name; state.joined = old.code ? [old.code] : []; saveLocal(); }
-  } catch { /* bỏ qua */ }
-
   await initBackend();
 
-  // Banner chế độ
   const banner = $("mode-banner");
   if (MODE === "local") {
-    banner.innerHTML = "📱 <b>Đang chạy thử trên máy này</b> — mọi tính năng dùng được, nhưng chưa đồng bộ với bạn bè. Dán <code>firebaseConfig</code> vào đầu file để bật đồng bộ nhóm real-time.";
+    banner.innerHTML = "📱 <b>Đang chạy thử trên máy này</b> — mọi tính năng dùng được (kể cả đăng ký/đăng nhập), nhưng chưa đồng bộ với bạn bè. Dán <code>firebaseConfig</code> vào đầu file để bật đồng bộ.";
     banner.classList.remove("hidden");
   } else {
     banner.classList.add("hidden");
   }
 
   bindEvents();
-  boot();
+
+  let session = null;
+  try { session = JSON.parse(store.getItem(SESSION_KEY)); } catch { /* bỏ qua */ }
+  if (session?.phone && session?.name) {
+    state.phone = session.phone;
+    state.uid = session.uid || "p" + session.phone;
+    state.name = session.name;
+    state.joined = session.groups || [];
+    boot();
+  } else {
+    showScreen("screen-auth");
+  }
 })();
 
 </script>
