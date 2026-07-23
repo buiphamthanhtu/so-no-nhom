@@ -1314,6 +1314,12 @@ function firebaseApi(db, fs) {
     async updateUser(phone, patch) {
       await fs.updateDoc(fs.doc(db, "users", phone), patch);
     },
+    async addUserGroup(phone, code) {
+      await fs.updateDoc(fs.doc(db, "users", phone), { groups: fs.arrayUnion(code) });
+    },
+    async removeUserGroup(phone, code) {
+      await fs.updateDoc(fs.doc(db, "users", phone), { groups: fs.arrayRemove(code) });
+    },
     /* groups */
     async getGroup(code) {
       const s = await fs.getDoc(fs.doc(db, "groups", code));
@@ -1369,6 +1375,14 @@ function localApi() {
     async updateUser(phone, patch) {
       const u = load(UKEY);
       if (u[phone]) { Object.assign(u[phone], patch); save(UKEY, u); }
+    },
+    async addUserGroup(phone, code) {
+      const u = load(UKEY);
+      if (u[phone]) { u[phone].groups = [...new Set([...(u[phone].groups || []), code])]; save(UKEY, u); }
+    },
+    async removeUserGroup(phone, code) {
+      const u = load(UKEY);
+      if (u[phone]) { u[phone].groups = (u[phone].groups || []).filter((c) => c !== code); save(UKEY, u); }
     },
     async getGroup(code) {
       const d = load(GKEY)[code];
@@ -1758,7 +1772,7 @@ async function removeGroupLocally(code) {
   delete state.data[code];
   state.joined = state.joined.filter((c) => c !== code);
   saveSession();
-  try { await api.updateUser(state.phone, { groups: state.joined }); } catch { /* bỏ qua */ }
+  try { await api.removeUserGroup(state.phone, code); } catch { /* bỏ qua */ }
   if (state.currentGroup === code) { state.currentGroup = null; showScreen("screen-home"); }
   renderAll();
 }
@@ -2419,7 +2433,7 @@ function bindEvents() {
       if (!state.joined.includes(code)) {
         state.joined.push(code);
         saveSession();
-        await api.updateUser(state.phone, { groups: state.joined });
+        await api.addUserGroup(state.phone, code); // từng phần tử — không đè mảng
       }
       subscribeGroup(code);
       closeAllModals();
@@ -2444,7 +2458,7 @@ function bindEvents() {
       await api.createGroup(code, groupName, state.uid, state.name);
       state.joined.push(code);
       saveSession();
-      await api.updateUser(state.phone, { groups: state.joined });
+      await api.addUserGroup(state.phone, code); // từng phần tử — không đè mảng
       subscribeGroup(code);
       closeAllModals();
       $("create-group").value = "";
@@ -2590,6 +2604,25 @@ function loginAs(phone, name, groups) {
     state.name = session.name;
     state.joined = session.groups || [];
     boot();
+    // Re-sync với server: localStorage chỉ là cache — nhóm join từ thiết bị khác phải hiện ở đây
+    (async () => {
+      try {
+        const u = await api.getUser(state.phone);
+        if (!u) return;
+        const server = u.groups || [];
+        const localOnly = state.joined.filter((c) => !server.includes(c));
+        const merged = [...new Set([...server, ...state.joined])];
+        const added = merged.filter((c) => !state.joined.includes(c));
+        if (added.length || localOnly.length) {
+          state.joined = merged;
+          saveSession();
+          added.forEach(subscribeGroup);
+          for (const c of localOnly) { try { await api.addUserGroup(state.phone, c); } catch { /* bỏ qua */ } }
+          renderAll();
+        }
+        if (u.name && u.name !== state.name) { state.name = u.name; saveSession(); boot(); }
+      } catch { /* offline thì thôi, giữ cache */ }
+    })();
   } else {
     showScreen("screen-auth");
   }
