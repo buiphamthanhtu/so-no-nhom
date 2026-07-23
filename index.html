@@ -673,6 +673,13 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 }
 .btn-clear:active { background: rgba(251, 56, 59, .12); }
 
+/* ═══════ TỔNG CHI: MÀU TỪNG DÒNG ═══════ */
+.tot-settle { color: var(--pen-green); }
+.tot-status { font-weight: 700; }
+.tot-status.pos { color: var(--pen-green); }
+.tot-status.neg { color: var(--pen-red); }
+.tot-status.ok { color: var(--ink-soft); font-weight: 400; }
+
 </style>
 </head>
 <body>
@@ -1694,15 +1701,20 @@ function renderTotalsPage(code, g) {
     (m === poorId && poorVal < -0.5 ? '<span class="badge badge--poor">🥲 Nghèo nhất xóm</span>' : "");
 
   $("totals-list").innerHTML = ordered.map((m) => {
-    const parts = [];
-    if (sentS[m] > 0) parts.push(`đã chuyển ${fmtVND(sentS[m])}`);
-    if (recvS[m] > 0) parts.push(`đã nhận ${fmtVND(recvS[m])}`);
-    const settleLine = parts.length
-      ? `<br><span style="color:var(--pen-green)">💸 cấn nợ: ${parts.join(" · ")}</span>` : "";
+    // Diễn đạt tự giải thích: chi giùm (trả kèo) / phần của mình / tiền cấn nợ / chốt trạng thái
+    const lines = [];
+    lines.push(`chi giùm nhóm <b>${fmtVND(paid[m] || 0)}</b>`);
+    lines.push(`phần của mình ${fmtVND(share[m] || 0)}`);
+    if (sentS[m] > 0) lines.push(`<span class="tot-settle">💸 đã chuyển cấn nợ ${fmtVND(sentS[m])}</span>`);
+    if (recvS[m] > 0) lines.push(`<span class="tot-settle">💸 đã nhận cấn nợ ${fmtVND(recvS[m])}</span>`);
+    const bal = balances[m] || 0;
+    if (bal > 0.5) lines.push(`<span class="tot-status pos">→ còn được nhận ${fmtVND(bal)}</span>`);
+    else if (bal < -0.5) lines.push(`<span class="tot-status neg">→ còn thiếu ${fmtVND(-bal)}</span>`);
+    else lines.push(`<span class="tot-status ok">✓ đã cân bằng</span>`);
     return `
     <div class="balance-row">
       <span>${escapeHTML(nameOf(g, m))}${m === state.uid ? " (bạn)" : ""}${badgesOf(m)}</span>
-      <span style="font-size:13px;text-align:right">đã trả trước <b>${fmtVND(paid[m] || 0)}</b><br>phần phải chịu ${fmtVND(share[m] || 0)}${settleLine}</span>
+      <span style="font-size:13px;text-align:right;line-height:1.6">${lines.join("<br>")}</span>
     </div>`;
   }).join("");
 }
