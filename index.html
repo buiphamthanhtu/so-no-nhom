@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0C008F">
-  <title>Sổ Nợ Nhóm — Chia tiền kiểu Splitwise</title>
-  <meta name="description" content="Sổ nợ nhóm: đăng nhập SĐT, ghi chi tiêu chung, tự tính ai chuyển cho ai. Đồng bộ real-time, miễn phí.">
+  <title>Sổ Nợ Nhóm — Đi chơi chung, chia tiền gọn</title>
+  <meta name="description" content="Ghi chi tiêu chung cho nhóm bạn: tự tính ai chuyển cho ai, cấn nợ tối ưu, QR thanh toán. Miễn phí.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playwrite+IE:wght@400&display=swap" rel="stylesheet">
   <style>
 /* ═══════════════════════════════════════════════
-   SỔ NỢ NHÓM — flow Splitwise, da "sổ nợ giấy kẻ ô"
+   SỔ NỢ NHÓM — da "sổ nợ giấy kẻ ô"
    Mobile-first · Physical-to-Digital
    ═══════════════════════════════════════════════ */
 
@@ -184,7 +184,7 @@ select {
 .tab-page.active { display: block; animation: page-in .2s ease; }
 @keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* ═══════ TRANG CHỦ: DANH SÁCH NHÓM (Splitwise Groups) ═══════ */
+/* ═══════ TRANG CHỦ: DANH SÁCH NHÓM ═══════ */
 .overall-balance {
   font-family: var(--font-ui); font-size: 20px;
   margin-bottom: 16px; padding: 0 4px;
@@ -259,7 +259,7 @@ select {
 .my-group-status.negative { color: var(--pen-red); }
 .my-group-status.zero { color: var(--ink-soft); }
 
-/* ═══════ FEED KIỂU SPLITWISE ═══════ */
+/* ═══════ FEED SỔ CHI ═══════ */
 .feed { display: flex; flex-direction: column; gap: 10px; }
 
 .month-heading {
@@ -278,7 +278,7 @@ select {
   position: relative;
 }
 
-/* Ô ngày bên trái như Splitwise */
+/* Ô ngày bên trái */
 .feed-date {
   flex-shrink: 0; width: 40px; text-align: center;
   border-right: 1.5px dashed var(--grid-line); padding-right: 9px;
@@ -891,6 +891,19 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
   .page-area, .page-area--group { padding-bottom: calc(var(--nav-h) + 56px); }
 }
 
+/* ═══════ THUMBNAIL NHÓM: icon SVG màu primary ═══════ */
+.group-card-icon { color: var(--ink); }
+.group-card-icon svg { width: 24px; height: 24px; display: block; }
+
+/* ═══════ ICON TRONG HEADING TAB ═══════ */
+.hd-icon {
+  display: inline-flex;
+  vertical-align: -3px;
+  margin-right: 8px;
+  color: var(--ink);
+}
+.hd-icon svg { width: 21px; height: 21px; display: block; }
+
 </style>
 </head>
 <body>
@@ -945,7 +958,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 <!-- ═════ MÀN 2: TRANG CHỦ (Nhóm · Tài khoản) ═════ -->
 <section id="screen-home" class="screen">
   <header class="app-header">
-    <h2 class="group-name" id="home-title">Sổ hộ nghèo</h2>
+    <h2 class="group-name" id="home-title">Sổ Nợ Nhóm</h2>
   </header>
 
   <div id="mode-banner" class="mode-banner hidden"></div>
@@ -1031,21 +1044,21 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 
     <!-- Trang 2: Cấn nợ -->
     <div id="gpage-settle" class="gtab-page">
-      <h3 class="ruled-heading">⚖️ Cấn nợ tối ưu</h3>
+      <h3 class="ruled-heading"><span class="hd-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.7499 7.01573C7.7631 7.13873 7 7.97993 7 9.00023C7 10.0205 7.763 10.8617 8.7499 10.9847V7.01573Z" fill="currentColor"/><path d="M1.75 7.5C3.8219 7.5 5.5 5.8219 5.5 3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 14.25C5.5 12.1781 3.8219 10.5 1.75 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 3.75C12.5 5.8219 14.1781 7.5 16.25 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.25 10.5C14.1781 10.5 12.5 12.1781 12.5 14.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.75 14.25H14.25C15.355 14.25 16.25 13.355 16.25 12.25V5.75C16.25 4.645 15.355 3.75 14.25 3.75H11.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.75 3.75H3.75C2.645 3.75 1.75 4.645 1.75 5.75V12.25C1.75 13.355 2.645 14.25 3.75 14.25H8.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.7499 7.01562C7.7631 7.13863 7 7.97982 7 9.00012C7 10.0204 7.763 10.8616 8.7499 10.9846" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.75 16.75V1.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Cấn nợ tối ưu</h3>
       <p class="hint" style="margin-bottom:12px">Đã gộp nợ để chuyển khoản ít lần nhất. <b>💸 Thanh toán</b> khoản mình nợ, <b>🧽 Xóa nợ</b> khi đã nhận đủ tiền.</p>
       <div id="settle-list" class="settle-list"></div>
     </div>
 
     <!-- Trang 3: Số dư -->
     <div id="gpage-balances" class="gtab-page">
-      <h3 class="ruled-heading">👥 Số dư từng người</h3>
+      <h3 class="ruled-heading"><span class="hd-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14.75 17.25L12.25 14.75L14.75 12.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 14.75H17.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.2173 9.6479C16.2363 9.434 16.25 9.2187 16.25 9C16.25 4.9961 13.0041 1.75 9 1.75C4.9959 1.75 1.75 4.9961 1.75 9C1.75 13.0039 4.9959 16.25 9 16.25C9.2188 16.25 9.4341 16.2363 9.6479 16.2173" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.64642 6.35358L6.35355 8.64645C6.15829 8.84171 6.15829 9.15829 6.35355 9.35355L8.64642 11.6464C8.84168 11.8417 9.15826 11.8417 9.35352 11.6464L11.6464 9.35355C11.8417 9.15829 11.8417 8.84171 11.6464 8.64645L9.35352 6.35358C9.15826 6.15832 8.84168 6.15832 8.64642 6.35358Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Số dư từng người</h3>
       <div id="balance-list" class="balance-list"></div>
       <p class="hint">Gửi mã nhóm cho bạn bè — ai đăng ký tài khoản rồi vào bằng mã sẽ tự có tên trong sổ.</p>
     </div>
 
     <!-- Trang 4: Tổng chi -->
     <div id="gpage-totals" class="gtab-page">
-      <h3 class="ruled-heading">∑ Tổng chi của nhóm</h3>
+      <h3 class="ruled-heading"><span class="hd-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(#clip0_5_53)"><path d="M11.25 6.75C12.9069 6.75 14.25 5.40685 14.25 3.75C14.25 2.09315 12.9069 0.75 11.25 0.75C9.59315 0.75 8.25 2.09315 8.25 3.75C8.25 5.40685 9.59315 6.75 11.25 6.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.25 3V4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.437 12.9655L15.254 10.7915C15.966 10.4705 16.803 10.7865 17.125 11.4985C17.446 12.2105 17.13 13.0475 16.418 13.3695L9.62698 16.4345C8.95098 16.7395 8.18598 16.7835 7.47898 16.5575L3.00098 15.1255" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.245 12.0979L9.216 12.9919C9.927 13.3149 10.765 12.9999 11.088 12.2889C11.411 11.5779 11.096 10.7399 10.385 10.4169L7.608 9.14891C5.312 8.12591 3.375 9.68791 3 11.5009" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M0.75 9.75H2C2.552 9.75 3 10.198 3 10.75V15.75C3 16.302 2.552 16.75 2 16.75H0.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_5_53"><rect width="18" height="18" fill="white"/></clipPath></defs></svg></span>Tổng chi của nhóm</h3>
       <p id="totals-amount" class="total-amount">0 ₫</p>
       <div id="totals-list" class="balance-list" style="margin-top:12px"></div>
     </div>
@@ -1162,7 +1175,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 </script>
 <script type="module">
 /* ═══════════════════════════════════════════════════════════
-   SỔ NỢ NHÓM — flow Splitwise + tài khoản SĐT/passcode
+   SỔ NỢ NHÓM — tài khoản SĐT/passcode
    Danh tính = ID; tên hiển thị tách riêng → đổi tên lan tỏa mọi nơi
    ═══════════════════════════════════════════════════════════ */
 
@@ -1711,7 +1724,7 @@ function renderHome() {
     else if (mine < -0.5) { cls = "negative"; txt = `bạn còn nợ ${fmtVND(-mine)}`; }
     return `
       <button class="group-card" data-open="${c}">
-        <span class="group-card-icon">📒</span>
+        <span class="group-card-icon"><svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 5.25L11.5 2.25C11.5 1.698 11.052 1.25 10.5 1.25H5C4.448 1.25 4 1.698 4 2.25L6 5.25H9.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.75 5.25V3.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.156 7.75C11.434 6.69 10.515 5.794 9.5 5.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 5.25C3.609 6.531 1.75 9.766 1.75 12.5C1.75 15.814 4.436 16.75 7.75 16.75C7.7923 16.75 7.83449 16.7498 7.87659 16.7495" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.25 7.75H11.75C11.198 7.75 10.75 8.198 10.75 8.75V9.75C10.75 10.302 11.198 10.75 11.75 10.75H16.25C16.802 10.75 17.25 10.302 17.25 9.75V8.75C17.25 8.198 16.802 7.75 16.25 7.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.25 10.75H10.75C10.198 10.75 9.75 11.198 9.75 11.75V12.75C9.75 13.302 10.198 13.75 10.75 13.75H15.25C15.802 13.75 16.25 13.302 16.25 12.75V11.75C16.25 11.198 15.802 10.75 15.25 10.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.25 13.75H11.75C11.198 13.75 10.75 14.198 10.75 14.75V15.75C10.75 16.302 11.198 16.75 11.75 16.75H16.25C16.802 16.75 17.25 16.302 17.25 15.75V14.75C17.25 14.198 16.802 13.75 16.25 13.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
         <span class="group-card-info">
           <span class="group-card-name">${escapeHTML(g.name)}</span>
           <span class="group-card-status ${cls}">${txt} · ${g.members.length} người</span>
@@ -2154,7 +2167,7 @@ function bindEvents() {
       btn.classList.add("active");
       document.querySelectorAll("#screen-home .tab-page").forEach((p) => p.classList.remove("active"));
       $(btn.dataset.tab).classList.add("active");
-      $("home-title").textContent = btn.dataset.tab === "tab-groups" ? "Sổ hộ nghèo" : "Tài khoản";
+      $("home-title").textContent = btn.dataset.tab === "tab-groups" ? "Sổ Nợ Nhóm" : "Tài khoản";
       $("btn-fab-home").style.display = btn.dataset.tab === "tab-groups" ? "" : "none";
     });
   });
