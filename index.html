@@ -694,6 +694,28 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 }
 .app-header .group-code strong { color: var(--ink); }
 
+/* ═══════ CẤN NỢ: card đồng nhất + tiền xuống dòng ═══════ */
+.settle-row {
+  border: 1px solid rgba(12, 0, 143, .25);
+  border-radius: 8px;
+}
+.settle-row .money {
+  display: block;
+  width: fit-content;
+  margin-top: 5px;
+}
+
+/* ═══════ NÚT COPY SỐ TIỀN TRONG DIALOG QR ═══════ */
+.btn-copy-amount {
+  display: block;
+  margin: 0 auto 14px;
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  color: var(--ink); background: var(--highlight);
+  border: 1.5px solid var(--ink); border-radius: 999px;
+  padding: 9px 18px; cursor: pointer;
+}
+.btn-copy-amount:active { transform: translate(1px, 1px); }
+
 </style>
 </head>
 <body>
@@ -948,6 +970,7 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
     <button type="button" id="btn-pay-close" class="modal-close" aria-label="Đóng">✕</button>
     <h3 class="modal-title">💸 Thanh toán cấn nợ</h3>
     <p id="pay-desc" class="confirm-text"></p>
+    <button type="button" id="btn-pay-copy" class="btn-copy-amount"></button>
     <img id="pay-qr-img" class="qr-img hidden" alt="QR nhận tiền">
     <p id="pay-qr-empty" class="hint hidden" style="text-align:center; margin-bottom:14px"></p>
     <div class="modal-actions">
@@ -1340,6 +1363,7 @@ async function openPaymentModal(code, s, fromName, toName) {
   $("pay-desc").innerHTML =
     `<b>${escapeHTML(fromName)}</b> chuyển cho <b>${escapeHTML(toName)}</b><br>` +
     `<span class="money">${fmtVND(payCtx.amount)}</span>`;
+  $("btn-pay-copy").innerHTML = `⧉ Copy số tiền <b>${fmtVND(payCtx.amount)}</b>`;
 
   // Lấy QR người nhận (có cache)
   let qr = null;
@@ -1646,7 +1670,7 @@ function renderSettlePage(code, g) {
           <span class="settle-text">
             <span class="who">${escapeHTML(nameOf(g, s.from))}</span> chuyển cho
             <span class="who">${escapeHTML(nameOf(g, s.to))}</span>
-            → <span class="money">${fmtVND(s.amount)}</span>
+            <span class="money">${fmtVND(s.amount)}</span>
           </span>
           ${action}
         </div>`;
@@ -1689,7 +1713,11 @@ function renderTotalsPage(code, g) {
     if (en.to) ids.add(en.to);
     (en.participants || []).forEach((p) => ids.add(p));
   }
-  const ordered = [...g.members, ...[...ids].filter((i) => !g.members.includes(i))];
+  const ordered = [...ids].sort((a, b) => {
+    if (a === state.uid) return -1;
+    if (b === state.uid) return 1;
+    return nameOf(g, a).localeCompare(nameOf(g, b), "vi");
+  });
 
   const paid = {}, share = {}, sentS = {}, recvS = {};
   ordered.forEach((m) => { paid[m] = 0; share[m] = 0; sentS[m] = 0; recvS[m] = 0; });
@@ -1983,6 +2011,17 @@ function bindEvents() {
   });
 
   /* Modal Thanh toán */
+  $("btn-pay-copy").addEventListener("click", async () => {
+    if (!payCtx) return;
+    const raw = String(payCtx.amount); // số trần để dán vào ô nhập tiền của app bank
+    try {
+      await navigator.clipboard.writeText(raw);
+      toast(`Đã copy ${fmtVND(payCtx.amount)} — mở app bank dán vào thôi ✓`);
+    } catch {
+      toast("Số tiền: " + raw + " — chép tay giúp nhé", 4000);
+    }
+  });
+
   $("btn-pay-close").addEventListener("click", () => {
     $("modal-pay").classList.add("hidden");
     payCtx = null;
