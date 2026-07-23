@@ -16,16 +16,16 @@
    ═══════════════════════════════════════════════ */
 
 :root {
-  --paper: #fdfbf3;
-  --grid-line: #cfe3d8;
-  --margin-red: #e8938c;
-  --ink: #2b3a55;
-  --ink-soft: #6b7a94;
-  --pen-red: #d64541;
+  --paper: #FFFFFF;                    /* nền trắng thuần */
+  --grid-line: rgba(12, 0, 143, .07);  /* ô caro tint primary */
+  --margin-red: #FB383B;
+  --ink: #0C008F;                      /* primary */
+  --ink-soft: rgba(12, 0, 143, .55);
+  --pen-red: #FB383B;
   --pen-green: #2e7d5b;
-  --highlight: #fff3b0;
-  --card: #fffdf6;
-  --shadow: 0 2px 10px rgba(43, 58, 85, .10);
+  --highlight: rgba(254, 191, 4, .5);  /* FEBF04 opacity 50% */
+  --card: #FFFFFF;
+  --shadow: 0 2px 10px rgba(12, 0, 143, .10);
   --radius: 12px;
   --nav-h: 62px;
 }
@@ -106,7 +106,7 @@ input[type="text"], input[type="tel"], input[type="password"], select {
 input:focus, select:focus { border-bottom: 2px solid var(--ink); }
 
 select {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%232b3a55' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230C008F' stroke-width='2' fill='none'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 6px center;
   padding-right: 26px;
 }
@@ -120,10 +120,10 @@ select {
   font-family: "Itim", cursive; font-size: 19px;
   color: var(--paper); background: var(--ink);
   border: none; border-radius: 10px; padding: 13px; cursor: pointer;
-  box-shadow: 3px 3px 0 rgba(43, 58, 85, .3);
+  box-shadow: 3px 3px 0 rgba(12, 0, 143, .3);
   transition: transform .08s;
 }
-.btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(43, 58, 85, .3); }
+.btn-primary:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 rgba(12, 0, 143, .3); }
 
 .btn-ghost {
   font-family: inherit; font-size: 14px; color: var(--ink-soft);
@@ -276,7 +276,7 @@ select {
 .feed-row {
   display: flex; align-items: center; gap: 11px;
   background: var(--card);
-  border: 1px solid rgba(43, 58, 85, .3);
+  border: 1px solid rgba(12, 0, 143, .3);
   border-radius: 10px;
   padding: 10px 12px;
   position: relative;
@@ -319,7 +319,7 @@ select {
 .activity-list { display: flex; flex-direction: column; gap: 10px; }
 .activity-row {
   background: var(--card);
-  border: 1px solid rgba(43, 58, 85, .3);
+  border: 1px solid rgba(12, 0, 143, .3);
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px; line-height: 1.5;
@@ -336,7 +336,7 @@ select {
 .balance-row {
   display: flex; justify-content: space-between; align-items: center;
   background: var(--card);
-  border: 1px solid rgba(43, 58, 85, .25);
+  border: 1px solid rgba(12, 0, 143, .25);
   border-left: 4px solid var(--ink-soft);
   border-radius: 8px;
   padding: 10px 12px; font-size: 15px;
@@ -392,7 +392,7 @@ select {
 .member-row {
   display: flex; align-items: center; gap: 10px;
   background: var(--card);
-  border: 1px solid rgba(43, 58, 85, .25);
+  border: 1px solid rgba(12, 0, 143, .25);
   border-radius: 8px;
   padding: 10px 12px; font-size: 15px;
 }
@@ -469,7 +469,7 @@ select {
 /* ═══════ MODAL SHEET ═══════ */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(43, 58, 85, .45);
+  background: rgba(12, 0, 143, .45);
   z-index: 50;
   display: flex; align-items: flex-end; justify-content: center;
 }
@@ -477,7 +477,7 @@ select {
 .modal-sheet {
   width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto;
   background: var(--card);
-  background-image: linear-gradient(rgba(207, 227, 216, .5) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(12, 0, 143, .06) 1px, transparent 1px);
   background-size: 100% 26px;
   border: 1.5px solid var(--ink); border-bottom: none;
   border-radius: 18px 18px 0 0;
@@ -615,6 +615,10 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
 
 /* FAB trong màn hình nhóm: nổi phía trên bottom bar 4 tab */
 #screen-group .fab { bottom: calc(var(--nav-h) + 16px); }
+
+/* ═══════ 4 TRANG TRONG NHÓM: mỗi tab một nội dung ═══════ */
+.gtab-page { display: none; }
+.gtab-page.active { display: block; animation: page-in .2s ease; }
 
 </style>
 </head>
@@ -812,10 +816,6 @@ input[type="tel"]:focus, input[type="password"]:focus { border-bottom: 2px solid
     <div class="modal-handle"></div>
     <h3 class="modal-title">✎ Ghi khoản chi mới</h3>
     <form id="form-expense">
-      <label class="field">
-        <span class="field-label">Cùng nhóm</span>
-        <select id="exp-group" required></select>
-      </label>
       <label class="field">
         <span class="field-label">Chi cho việc gì?</span>
         <input type="text" id="exp-desc" placeholder="Ví dụ: Ăn hải sản tối" maxlength="60" autocomplete="off" required>
@@ -1483,13 +1483,11 @@ async function recordSettlement(code, from, to, amount, fromName, toName) {
 }
 
 /* ─────────────── MODAL GHI KHOẢN CHI ─────────────── */
-function openExpenseModal(presetCode) {
-  if (state.joined.length === 0) { toast("Lập sổ hoặc nhập mã vào nhóm trước đã nhé!"); return; }
-  const codes = state.joined;
-  $("exp-group").innerHTML = codes.map((c) =>
-    `<option value="${c}">${escapeHTML(state.data[c]?.name || c)}</option>`).join("");
+let expenseGroupCode = null;
+
+function openExpenseModal(code) {
+  expenseGroupCode = code;
   $("form-expense").reset();
-  $("exp-group").value = presetCode || codes[0];
   rebuildExpensePeople();
   $("exp-amount-preview").textContent = "";
   setSplitMode("equal");
@@ -1498,7 +1496,7 @@ function openExpenseModal(presetCode) {
 }
 
 function rebuildExpensePeople() {
-  const g = state.data[$("exp-group").value] || { members: [], names: {} };
+  const g = state.data[expenseGroupCode] || { members: [], names: {} };
   $("exp-payer").innerHTML = g.members.map((m) =>
     `<option value="${escapeHTML(m)}" ${m === state.uid ? "selected" : ""}>${escapeHTML(nameOf(g, m))}</option>`).join("");
   $("exp-participants").innerHTML = g.members.map((m) =>
@@ -1519,7 +1517,7 @@ const checkedParticipants = () =>
 
 function refreshCustomSplits() {
   if (state.splitMode === "equal") { $("split-check").textContent = ""; $("split-check").className = "split-check"; return; }
-  const g = state.data[$("exp-group").value] || { names: {} };
+  const g = state.data[expenseGroupCode] || { names: {} };
   const people = checkedParticipants();
 
   if (state.splitMode === "custom") {
@@ -1796,8 +1794,11 @@ function bindEvents() {
   });
 
   /* Khoản chi */
-  $("exp-group").addEventListener("change", rebuildExpensePeople);
-  $("btn-fab-home").addEventListener("click", () => openExpenseModal(null));
+  $("btn-fab-home").addEventListener("click", () => {
+    if (state.joined.length === 0) return toast("Lập sổ hoặc nhập mã vào nhóm trước đã nhé!");
+    if (state.joined.length === 1) return openExpenseModal(state.joined[0]);
+    toast("Bạn có nhiều sổ — mở sổ muốn ghi rồi bấm ＋ trong sổ đó nhé");
+  });
   $("btn-fab-group").addEventListener("click", () => openExpenseModal(state.currentGroup));
   $("btn-cancel-expense").addEventListener("click", closeAllModals);
 
@@ -1821,7 +1822,7 @@ function bindEvents() {
 
   $("form-expense").addEventListener("submit", async (e) => {
     e.preventDefault();
-    const code = $("exp-group").value;
+    const code = expenseGroupCode;
     const desc = $("exp-desc").value.trim();
     const amount = parseAmount($("exp-amount").value);
     const payer = $("exp-payer").value;
